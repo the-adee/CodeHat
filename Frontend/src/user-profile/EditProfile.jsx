@@ -1,10 +1,10 @@
+import Header from "../components/Navigation/Header";
+import Footer from "../components/Navigation/Footer";
 import { useLocation, useNavigate } from "react-router-dom";
-import React, { useEffect, useState } from "react";
-import HeadNavBar from "./head-nav-bar";
-import FootNavBar from "./foot-nav-bar";
+import { useEffect, useState } from "react";
 import { css } from "@emotion/react";
 import { ScaleLoader } from "react-spinners";
-import NoUserError from "./nousererror";
+import NoUserError from "../errors/NoUserError";
 
 const override = css`
   display: block;
@@ -320,7 +320,7 @@ const EditProfile = () => {
   if (!authChecked) {
     return (
       <>
-        <HeadNavBar />
+        <Header />
         <div className="flex justify-center items-center h-screen">
           <ScaleLoader
             css={override}
@@ -329,7 +329,7 @@ const EditProfile = () => {
             loading={true}
           />
         </div>
-        <FootNavBar />
+        <Footer />
       </>
     );
   }
@@ -338,9 +338,9 @@ const EditProfile = () => {
   if (authChecked && !isAuthenticated) {
     return (
       <>
-        <HeadNavBar />
+        <Header />
         <NoUserError />
-        <FootNavBar />
+        <Footer />
       </>
     );
   }
@@ -348,7 +348,7 @@ const EditProfile = () => {
   if (isLoading) {
     return (
       <>
-        <HeadNavBar />
+        <Header />
         <div className="flex justify-center items-center h-screen">
           <ScaleLoader
             css={override}
@@ -357,14 +357,14 @@ const EditProfile = () => {
             loading={isLoading}
           />
         </div>
-        <FootNavBar />
+        <Footer />
       </>
     );
   }
 
   return (
     <>
-      <HeadNavBar />
+      <Header />
       <div
         className="container mx-auto p-5 bg-gray-50 dark:bg-white px-4 lg:px-16"
         style={{
@@ -1103,7 +1103,7 @@ const EditProfile = () => {
           </form>
         </div>
       </div>
-      <FootNavBar />
+      <Footer />
     </>
   );
 };

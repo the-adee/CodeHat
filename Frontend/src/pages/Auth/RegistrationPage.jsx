@@ -1,10 +1,9 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import HeadNavBar from "./head-nav-bar";
-import FootNavBar from "./foot-nav-bar";
+import Header from "../../components/Navigation/Header";
+import Footer from "../../components/Navigation/Footer";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
-import axios from "axios";
+import { auth } from "../../Firebase";
 import ReCAPTCHA from "react-google-recaptcha";
 
 const RegistrationPage = () => {
@@ -105,7 +104,7 @@ const RegistrationPage = () => {
 
   return (
     <>
-      <HeadNavBar />
+      <Header />
       <section
         className="bg-gray-50 dark:bg-white px-4 lg:px-16 pb-20"
         style={{
@@ -116,7 +115,7 @@ const RegistrationPage = () => {
         <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
           <a
             href="#"
-            className="flex items-center mb-6 mt-10 text-2xl font-semibold text-gray-900 dark:text-black"
+            className="flex items-center mb-6 mt-20 text-2xl font-semibold text-gray-900 dark:text-black"
           >
             <span className="flex items-center text-5xl font-extrabold dark:text-white">
               CodeHat™
@@ -306,7 +305,7 @@ const RegistrationPage = () => {
           </div>
         </div>
       </section>
-      <FootNavBar />
+      <Footer />
     </>
   );
 };

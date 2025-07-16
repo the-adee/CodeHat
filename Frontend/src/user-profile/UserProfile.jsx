@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
-import HeadNavBar from "./head-nav-bar";
-import FootNavBar from "./foot-nav-bar";
+import { useEffect, useState } from "react";
+import Header from "../components/Navigation/Header";
+import Footer from "../components/Navigation/Footer";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../firebase";
-import NoUserError from "./nousererror";
+import { auth } from "../Firebase";
+import NoUserError from "../errors/NoUserError";
 import { ScaleLoader } from "react-spinners";
 
 const ProfilePage = () => {
@@ -79,7 +79,7 @@ const ProfilePage = () => {
 
   return (
     <>
-      <HeadNavBar />
+      <Header />
       {isLoading ? (
         // Render loading spinner while data is loading
         <div className="flex justify-center items-center h-screen">
@@ -448,7 +448,7 @@ const ProfilePage = () => {
           <NoUserError />
         </>
       )}
-      <FootNavBar />
+      <Footer />
     </>
   );
 };

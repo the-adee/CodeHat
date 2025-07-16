@@ -75,7 +75,7 @@ export default function Header() {
                         <Menu.Button className="flex">
                           <span className="sr-only">Open user menu</span>
                           <span className="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-base font-medium">
-                            Online Compliers
+                            Online Compilers
                           </span>
                         </Menu.Button>
                       </div>
@@ -92,7 +92,7 @@ export default function Header() {
                           <Menu.Item>
                             {({ active }) => (
                               <Link
-                                to="/python"
+                                to="/pythoncompiler"
                                 className={classNames(
                                   active ? "bg-gray-300" : "",
                                   "block px-4 py-2 text-sm text-gray-800"
@@ -250,7 +250,7 @@ export default function Header() {
                     <Menu.Item>
                       {({ active }) => (
                         <Link
-                          to="/python"
+                          to="/pythoncompiler"
                           className={classNames(
                             active ? "bg-gray-300" : "",
                             "block px-4 py-2 text-sm text-gray-800"

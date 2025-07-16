@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { auth } from "firebase/auth";
+import { useState, useEffect } from "react";
+import { auth } from "../Firebase";
 import ReactMarkdown from "react-markdown";
-import HeadNavBar from "../head-nav-bar";
-import FootNavBar from "../foot-nav-bar";
+import Header from "../components/Navigation/Header";
+import Footer from "../components/Navigation/Footer";
 
 function AdminPanel() {
   const [user, setUser] = useState(null);
@@ -124,15 +124,10 @@ function AdminPanel() {
     if (window.confirm("Are you sure you want to delete this problem?")) {
       try {
         const token = await user.getIdToken();
-        const response = await fetch(
-          `${
-            process.env.REACT_APP_API_URL || "http://localhost:3000"
-          }/api/problems/${id}`,
-          {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const response = await fetch(`${backend_api}/api/problems/${id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
         if (response.ok) {
           alert("Problem deleted successfully!");
@@ -150,13 +145,13 @@ function AdminPanel() {
   if (loading) {
     return (
       <>
-        <HeadNavBar />
+        <Header />
         <div className="flex justify-center items-center h-screen">
           <div className="text-center">
             <p className="text-gray-500">Loading...</p>
           </div>
         </div>
-        <FootNavBar />
+        <Footer />
       </>
     );
   }
@@ -164,7 +159,7 @@ function AdminPanel() {
   if (!user || !isAdmin) {
     return (
       <>
-        <HeadNavBar />
+        <Header />
         <div className="flex justify-center items-center h-screen">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-700 mb-2">
@@ -173,14 +168,14 @@ function AdminPanel() {
             <p className="text-gray-500">Admin privileges required</p>
           </div>
         </div>
-        <FootNavBar />
+        <Footer />
       </>
     );
   }
 
   return (
     <>
-      <HeadNavBar />
+      <Header />
       <div className="container mx-auto p-4">
         <h1 className="text-3xl font-bold mb-6">Admin Panel</h1>
 
@@ -387,7 +382,7 @@ function AdminPanel() {
           </div>
         </div>
       </div>
-      <FootNavBar />
+      <Footer />
     </>
   );
 }

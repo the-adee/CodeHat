@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
-import HeadNavBar from "./head-nav-bar";
-import FootNavBar from "./foot-nav-bar";
+import { useState, useEffect } from "react";
+import Header from "../components/Navigation/Header";
+import Footer from "../components/Navigation/Footer";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../firebase";
-import NoUserError from "./nousererror";
+import { auth } from "../Firebase";
+import NoUserError from "../errors/NoUserError";
 import { css } from "@emotion/react";
 import { ScaleLoader } from "react-spinners";
 
@@ -290,7 +290,7 @@ const ProfileCreationPage = () => {
   if (isLoading) {
     return (
       <>
-        <HeadNavBar />
+        <Header />
         <div className="flex justify-center items-center h-screen">
           <ScaleLoader
             css={override}
@@ -299,14 +299,14 @@ const ProfileCreationPage = () => {
             loading={isLoading}
           />
         </div>
-        <FootNavBar />
+        <Footer />
       </>
     );
   }
 
   return (
     <>
-      <HeadNavBar />
+      <Header />
       {user ? (
         <div
           className="container mx-auto p-5 bg-gray-50 dark:bg-white px-4 lg:px-16"
@@ -1056,7 +1056,7 @@ const ProfileCreationPage = () => {
       ) : (
         <NoUserError />
       )}
-      <FootNavBar />
+      <Footer />
     </>
   );
 };

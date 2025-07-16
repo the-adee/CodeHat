@@ -4,6 +4,7 @@ import { EditorView, keymap } from "@codemirror/view";
 import { python } from "@codemirror/lang-python";
 import { defaultKeymap } from "@codemirror/commands";
 import { basicSetup } from "codemirror";
+import { oneDark } from "@codemirror/theme-one-dark"; // <-- 1. Add this import
 
 export default function PythonEditor({ value, onChange }) {
   const editorRef = useRef(null);
@@ -16,6 +17,7 @@ export default function PythonEditor({ value, onChange }) {
         doc: value,
         extensions: [
           basicSetup,
+          oneDark, // <-- 2. Add the theme to the extensions
           python(),
           keymap.of(defaultKeymap),
           EditorView.updateListener.of((update) => {
@@ -40,7 +42,7 @@ export default function PythonEditor({ value, onChange }) {
         viewRef.current = null;
       };
     }
-  }, [onChange]); // Only re-run if onChange changes, which it shouldn't
+  }, [onChange]);
 
   // Synchronize external value changes with the editor
   useEffect(() => {
@@ -58,10 +60,9 @@ export default function PythonEditor({ value, onChange }) {
     <div
       ref={editorRef}
       style={{
-        border: "1px solid #ddd",
-        borderRadius: 4,
-        minHeight: 200,
-        minWidth: 500,
+        border: "1px solid #334155", // Adjusted border for the new theme
+        borderRadius: "0.375rem", // 6px
+        overflow: "hidden", // Ensures the theme's background respects the border radius
       }}
     />
   );

@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import Header from "../../../components/Navigation/Header";
-import Footer from "../../../components/Navigation/Footer";
+import Header from "../../components/Navigation/Header";
+import Footer from "../../components/Navigation/Footer";
 import { Link } from "react-router-dom";
-import { auth } from "../firebase";
-import NoLoginError from "./nologinerror";
+import { auth } from "../../Firebase";
+import NoLoginError from "../../errors/NoLoginError";
 import { css } from "@emotion/react";
 import { ScaleLoader } from "react-spinners";
-import ThoughtfulQuote from "./quotes";
+import DisplayQuotes from "../../components/LoadingScreen/DisplayQuotes";
 
 const override = css`
   display: block;
@@ -57,7 +57,7 @@ function PracticePage() {
             color={"#123abc"}
             loading={isLoading}
           />
-          <ThoughtfulQuote />
+          <DisplayQuotes />
         </div>
       ) : user ? (
         <div className="container mx-auto p-4">

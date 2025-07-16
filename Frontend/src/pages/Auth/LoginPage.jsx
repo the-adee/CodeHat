@@ -1,9 +1,9 @@
-import React, { useRef, useState } from "react";
-import HeadNavBar from "./head-nav-bar";
-import FootNavBar from "./foot-nav-bar";
+import { useRef, useState } from "react";
+import Header from "../../components/Navigation/Header";
+import Footer from "../../components/Navigation/Footer";
 import { Link } from "react-router-dom";
 import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth } from "../../Firebase";
 import ReCAPTCHA from "react-google-recaptcha";
 
 const LoginPage = () => {
@@ -14,33 +14,6 @@ const LoginPage = () => {
   const recaptcha = useRef();
   const site_Key = import.meta.env.VITE_SITE_KEY;
   const backend_api = import.meta.env.VITE_BACKEND_API;
-
-  const logIn = (e) => {
-    e.preventDefault();
-    setLoading(true); // Set loading to true when the login process starts
-
-    signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        alert("Login successful! Redirecting to practice page...");
-        // console.log(userCredential);
-        setLoading(false); // Reset loading to false when the login process is complete
-        if (
-          onAuthStateChanged(auth, (user) => {
-            if (user) {
-              // console.log(user);
-              window.location.href = "/practice";
-            } else {
-              console.log("No user is signed in.");
-            }
-          })
-        );
-      })
-      .catch((error) => {
-        alert("Invalid Email & Password!");
-        // console.log(error);
-        setLoading(false); // Reset loading to false in case of an error
-      });
-  };
 
   async function submitForm(event) {
     event.preventDefault();
@@ -90,7 +63,7 @@ const LoginPage = () => {
 
   return (
     <>
-      <HeadNavBar />
+      <Header />
       <section
         className="bg-gray-50 dark:bg-white-900 px-4 lg:px-16"
         style={{
@@ -248,7 +221,7 @@ const LoginPage = () => {
           </div>
         </div>
       </section>
-      <FootNavBar />
+      <Footer />
     </>
   );
 };

@@ -1,5 +1,6 @@
-import Header from "../../components/Navigation/Header";
-import Footer from "../../components/Navigation/Footer";
+import Header from "../components/Navigation/Header";
+import Footer from "../components/Navigation/Footer";
+
 function Vision() {
   return (
     <>

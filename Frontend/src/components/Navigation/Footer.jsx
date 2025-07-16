@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 
 function Footer() {
@@ -63,7 +62,7 @@ function Footer() {
                   </a>
                 </li>
                 <li>
-                  <Link to="/terms" className="hover:underline">
+                  <Link to="/termsconditions" className="hover:underline">
                     Terms &amp; Conditions
                   </Link>
                 </li>

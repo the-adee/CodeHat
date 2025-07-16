@@ -1,6 +1,6 @@
-import Header from "../../../components/Navigation/Header";
-import Footer from "../../../components/Navigation/Footer";
-import ImageCarousel from "./imagecarousel";
+import Header from "../../components/Navigation/Header";
+import Footer from "../../components/Navigation/Footer";
+import ImageCarousel from "../../components/ImageCarousel";
 
 const ParticipatePage = () => {
   const images = [
