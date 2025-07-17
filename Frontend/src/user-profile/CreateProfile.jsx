@@ -54,7 +54,7 @@ const ProfileCreationPage = () => {
         description: "",
       },
     ],
-    C_FullInfo: "",
+    C_Website: "",
     C_Status: true,
     C_DOJ: new Date().toISOString(),
   });
@@ -603,8 +603,8 @@ const ProfileCreationPage = () => {
                     </label>
                     <input
                       type="url"
-                      name="C_FullInfo"
-                      value={formData.C_FullInfo}
+                      name="C_Website"
+                      value={formData.C_Website}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                       placeholder="https://yourportfolio.com"

@@ -80,15 +80,6 @@ function PythonCompiler() {
     saveAs(blob, "output.txt");
   };
 
-  if (isAuthenticating) {
-    return (
-      <div className="flex flex-col justify-center items-center h-screen bg-slate-900">
-        <ScaleLoader color={"#38bdf8"} loading={isAuthenticating} />
-        <DisplayQuotes />
-      </div>
-    );
-  }
-
   if (!user) {
     return (
       <div className="flex flex-col min-h-screen bg-slate-900">
@@ -97,6 +88,15 @@ function PythonCompiler() {
           <NoLoginError />
         </main>
         <Footer />
+      </div>
+    );
+  }
+
+  if (isAuthenticating) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-slate-900">
+        <ScaleLoader color={"#38bdf8"} loading={isAuthenticating} />
+        <DisplayQuotes />
       </div>
     );
   }
