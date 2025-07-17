@@ -3,22 +3,31 @@ import Header from "../../components/Navigation/Header";
 import Footer from "../../components/Navigation/Footer";
 import { auth } from "../../Firebase";
 import { useNavigate } from "react-router-dom";
+import NoUserError from "../../errors/NoUserError";
 
 const DeleteAccount = () => {
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [confirmationText, setConfirmationText] = useState("");
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const backend_api = import.meta.env.VITE_BACKEND_API;
 
   const REQUIRED_PHRASE = "Delete My Account";
 
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
+      setUser(firebaseUser);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const handleDelete = async () => {
     setLoading(true);
     setStatus("");
 
-    const user = auth.currentUser;
     if (!user) {
       setStatus("No user is currently signed in.");
       setLoading(false);
@@ -46,6 +55,16 @@ const DeleteAccount = () => {
 
     setLoading(false);
   };
+
+  if (!user)
+    return (
+      <>
+        <Header />
+
+        <NoUserError />
+        <Footer />
+      </>
+    );
 
   return (
     <>

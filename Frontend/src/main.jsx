@@ -1,4 +1,3 @@
-import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./index.css";
@@ -17,10 +16,9 @@ import AdminPanel from "./admin/AdminPanel";
 import ProblemSolver from "./pages/Coding/ProblemSolver";
 import ProblemSolution from "./pages/Coding/ProblemSolution";
 import DeleteAccount from "./pages/Auth/DeleteAccount";
+
 import TermsOfService from "./pages/TermsOfService";
 import Vision from "./pages/Vision";
-
-import ProtectedRoute from "./auth/ProtectedRoute";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Router>
@@ -29,90 +27,18 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Route path="*" element={<PageNotFound />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-
-      <Route
-        path="/verify-email"
-        element={
-          <ProtectedRoute>
-            <VerifyEmailPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/createprofile"
-        element={
-          <ProtectedRoute>
-            <CreateProfile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/userprofile"
-        element={
-          <ProtectedRoute>
-            <UserProfile />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/updateprofile"
-        element={
-          <ProtectedRoute>
-            <EditProfile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/practice"
-        element={
-          <ProtectedRoute>
-            <PracticePage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/participate"
-        element={
-          <ProtectedRoute>
-            <ParticipatePage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/pythoncompiler"
-        element={
-          <ProtectedRoute>
-            <PythonCompiler />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/solve/:id"
-        element={
-          <ProtectedRoute>
-            <ProblemSolver />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/solve/:id/solution"
-        element={
-          <ProtectedRoute>
-            <ProblemSolution />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/delete-account"
-        element={
-          <ProtectedRoute>
-            <DeleteAccount />
-          </ProtectedRoute>
-        }
-      />
-
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/createprofile" element={<CreateProfile />} />
+      <Route path="/practice" element={<PracticePage />} />
+      <Route path="/participate" element={<ParticipatePage />} />
+      <Route path="/userprofile" element={<UserProfile />} />
+      <Route path="/updateprofile" element={<EditProfile />} />
+      <Route path="/pythoncompiler" element={<PythonCompiler />} />
       <Route path="/admin" element={<AdminPanel />} />
+      <Route path="/solve/:id" element={<ProblemSolver />} />
+      <Route path="/solve/:id/solution" element={<ProblemSolution />} />
+      <Route path="/delete-account" element={<DeleteAccount />} />
+
       <Route path="/termsofservice" element={<TermsOfService />} />
       <Route path="/vision" element={<Vision />} />
     </Routes>
