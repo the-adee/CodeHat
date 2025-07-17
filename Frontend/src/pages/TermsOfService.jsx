@@ -2,6 +2,12 @@ import Header from "../components/Navigation/Header";
 import Footer from "../components/Navigation/Footer";
 
 const TermsAndConditions = () => {
+  const email = import.meta.env.VITE_EMAIL;
+
+  const handleDeleteClick = () => {
+    window.location.href = "/delete-account"; // or wherever your delete account page is
+  };
+
   return (
     <>
       <Header />
@@ -61,12 +67,21 @@ const TermsAndConditions = () => {
             If you have any questions or concerns about these Terms, please
             contact us at{" "}
             <span className="italic">
-              <a href="mailto:hapticfeedbak@proton.me">
-                hapticfeedbak@proton.me
-              </a>
+              <a href={`mailto:${email}`}>{email}</a>
             </span>
             .
           </p>
+
+          {/* Subtle data control button */}
+          <div className="mt-8 text-center">
+            <button
+              onClick={handleDeleteClick}
+              className="text-sm underline text-gray-600 hover:text-gray-900 transition"
+              aria-label="Control your account data"
+            >
+              Control your account data
+            </button>
+          </div>
 
           <p className="text-sm text-gray-500 mt-10 italic">
             Last updated: July 2025

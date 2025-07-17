@@ -2,7 +2,10 @@ import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import Header from "../../components/Navigation/Header";
 import Footer from "../../components/Navigation/Footer";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+} from "firebase/auth";
 import { auth } from "../../Firebase";
 import ReCAPTCHA from "react-google-recaptcha";
 
@@ -53,12 +56,23 @@ const RegistrationPage = () => {
       if (data.success) {
         // Proceed with registration
         createUserWithEmailAndPassword(auth, email, password)
-          .then((userCredential) => {
+          .then(async (userCredential) => {
+            const user = userCredential.user;
+
+            // ✅ Send email verification
+            await sendEmailVerification(user);
+
             alert(
-              "Registration successful! Redirecting to create profile page..."
+              "Registration successful! A verification email has been sent to your inbox. Please verify your email before logging in."
             );
+
             setLoading(false);
-            window.location.href = "/createprofile";
+
+            // ✅ Sign out user after registration to prevent unverified access
+            await auth.signOut();
+
+            // ✅ Redirect to login page
+            window.location.href = "/verify-email";
           })
           .catch((error) => {
             console.log(error);
@@ -148,12 +162,6 @@ const RegistrationPage = () => {
                     required
                   />
                 </div>
-                <label
-                  htmlFor="PP"
-                  className="block text-sm font-medium text-gray-900 dark:text-black"
-                >
-                  Upload your Profile Picture
-                </label>
 
                 <div>
                   <label

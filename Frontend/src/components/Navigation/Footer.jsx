@@ -62,8 +62,8 @@ function Footer() {
                   </a>
                 </li>
                 <li>
-                  <Link to="/termsconditions" className="hover:underline">
-                    Terms &amp; Conditions
+                  <Link to="/termsofservice" className="hover:underline">
+                    Terms of Service
                   </Link>
                 </li>
               </ul>

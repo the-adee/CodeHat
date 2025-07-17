@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import Header from "../../components/Navigation/Header";
 import Footer from "../../components/Navigation/Footer";
 import { Link } from "react-router-dom";
-import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../Firebase";
 import ReCAPTCHA from "react-google-recaptcha";
 import Alert from "../../components/UI/Alert";
@@ -13,7 +13,6 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Add alert state management
   const [alert, setAlert] = useState({
     show: false,
     type: "info",
@@ -24,14 +23,8 @@ const LoginPage = () => {
   const site_Key = import.meta.env.VITE_SITE_KEY;
   const backend_api = import.meta.env.VITE_BACKEND_API;
 
-  // Helper function to show alerts
   const showAlert = (type, message, autoClose = true) => {
-    setAlert({
-      show: true,
-      type,
-      message,
-    });
-
+    setAlert({ show: true, type, message });
     if (autoClose) {
       setTimeout(() => {
         setAlert((prev) => ({ ...prev, show: false }));
@@ -54,29 +47,57 @@ const LoginPage = () => {
       const res = await fetch(`${backend_api}/verify`, {
         method: "POST",
         body: JSON.stringify({ captchaValue }),
-        headers: {
-          "content-type": "application/json",
-        },
+        headers: { "content-type": "application/json" },
       });
 
       const data = await res.json();
 
       if (data.success) {
-        // Show loading message
         showAlert("info", "Verifying credentials...", false);
 
         signInWithEmailAndPassword(auth, email, password)
-          .then((userCredential) => {
-            showAlert(
-              "success",
-              "Login successful! Redirecting to practice page..."
-            );
-            setLoading(false);
+          .then(async (userCredential) => {
+            const user = userCredential.user;
+            await user.reload();
 
-            // Redirect after showing success message
-            setTimeout(() => {
-              window.location.href = "/practice";
-            }, 1500);
+            if (!user.emailVerified) {
+              showAlert(
+                "warning",
+                "Email not verified. Please check your inbox or spam folder."
+              );
+              await auth.signOut();
+              setLoading(false);
+              return;
+            }
+
+            // Check profile existence in backend MongoDB
+            try {
+              const profileRes = await fetch(
+                `${backend_api}/user?email=${encodeURIComponent(user.email)}`
+              );
+
+              const profileData = await profileRes.json();
+              console.log(profileData);
+
+              setLoading(false);
+
+              if (profileRes.status === 200) {
+                showAlert("success", "Login successful! Redirecting...");
+                setTimeout(() => {
+                  window.location.href = "/practice";
+                }, 1500);
+              } else if (profileRes.status === 404) {
+                showAlert("success", "First login detected! Redirecting...");
+                setTimeout(() => {
+                  window.location.href = "/createprofile";
+                }, 1500);
+              } else {
+                showAlert("error", "Unexpected response from server.");
+              }
+            } catch {
+              showAlert("error", "Error checking profile. Try again.");
+              setLoading(false);
+            }
           })
           .catch((error) => {
             showAlert("error", "Invalid email or password!");
@@ -114,7 +135,6 @@ const LoginPage = () => {
             </span>
           </a>
 
-          {/* Alert Component - Place it here for better visibility */}
           {alert.show && (
             <div className="w-full sm:max-w-md mb-4">
               <Alert
@@ -139,7 +159,7 @@ const LoginPage = () => {
                 action="#"
                 method="POST"
               >
-                {/* Your existing form fields remain the same */}
+                {/* form fields unchanged */}
                 <div>
                   <label
                     htmlFor="email"
@@ -182,7 +202,6 @@ const LoginPage = () => {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute inset-y-0 right-3 flex items-center text-gray-600 dark:text-gray-300 focus:outline-none"
                     >
-                      {/* Your existing eye icon SVGs */}
                       {showPassword ? (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"

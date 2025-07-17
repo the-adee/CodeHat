@@ -187,9 +187,12 @@ export default function Header() {
                             >
                               Your Profile
                             </Link>
-                            <span className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-600 hover:text-white">
-                              Logged in as: {user}
+                            <span className="block break-words max-w-[12rem] px-4 py-2 text-sm text-gray-700 hover:bg-slate-600 hover:text-white">
+                              Logged in as:
+                              <br />
+                              {user}
                             </span>
+
                             <button onClick={() => auth.signOut()}>
                               <span className="bg-gray-100 block w-48 hover:bg-slate-600 px-4 py-2 text-sm hover:text-white text-gray-700">
                                 Logout

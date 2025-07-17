@@ -313,7 +313,7 @@ const EditProfile = () => {
   };
 
   const handleCancel = () => {
-    navigate(-1); // Go back to previous page
+    navigate("/userprofile"); // Go back to previous page
   };
 
   // Show loading while checking authentication
