@@ -1,81 +1,99 @@
-import { useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 const ImageCarousel = ({ images }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const touchStartX = useRef(null);
+  const touchEndX = useRef(null);
 
   const nextImage = () => {
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === images.length - 1 ? 0 : prevIndex + 1
-    );
+    setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === 0 ? images.length - 1 : prevIndex - 1
-    );
+    setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+
+  const goToImage = (index) => setCurrentImageIndex(index);
+
+  useEffect(() => {
+    const interval = setInterval(nextImage, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    touchEndX.current = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX.current;
+    if (diff > 50) nextImage();
+    else if (diff < -50) prevImage();
   };
 
   return (
-    <div className="relative">
-      <div className="w-full overflow-hidden">
-        <div className="flex items-center">
+    <div
+      className="relative w-full h-64 sm:h-80 md:h-[28rem] lg:h-[32rem] rounded-xl overflow-hidden shadow-xl"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <img
+        src={images[currentImageIndex]}
+        alt={`Slide ${currentImageIndex}`}
+        className="w-full h-full object-cover transition-all duration-500"
+      />
+
+      {/* Prev Button */}
+      <button
+        onClick={prevImage}
+        className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black/40 text-white p-2 rounded-full hover:scale-105 transition"
+      >
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+      </button>
+
+      {/* Next Button */}
+      <button
+        onClick={nextImage}
+        className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black/40 text-white p-2 rounded-full hover:scale-105 transition"
+      >
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
+      </button>
+
+      {/* Dots */}
+      <div className="absolute bottom-4 w-full flex justify-center gap-2">
+        {images.map((_, index) => (
           <button
-            type="button"
-            onClick={prevImage}
-            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 inline-flex items-center ml-2 md:ml-4 md:mr-4 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-            style={{
-              backgroundImage: "linear-gradient(to right, #38a3a5, #57cc99)",
-              color: "#fff",
-            }}
-          >
-            <svg
-              className="w-5 h-5 mr-1"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            Previous
-          </button>
-          <div className="flex-auto">
-            <img
-              src={images[currentImageIndex]}
-              alt={`Image ${currentImageIndex}`}
-              className="w-full"
-              style={{ height: "auto" }}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={nextImage}
-            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 inline-flex items-center ml-2 md:ml-4 md:mr-4 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-            style={{
-              backgroundImage: "linear-gradient(to right, #38a3a5, #57cc99)",
-              color: "#fff",
-            }}
-          >
-            Next
-            <svg
-              className="w-5 h-5 ml-1"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-        </div>
+            key={index}
+            onClick={() => goToImage(index)}
+            className={`w-3 h-3 rounded-full ${
+              index === currentImageIndex ? "bg-white" : "bg-white/40"
+            }`}
+          />
+        ))}
       </div>
     </div>
   );

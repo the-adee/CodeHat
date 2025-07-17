@@ -1,83 +1,81 @@
 import Header from "../components/Navigation/Header";
 import Footer from "../components/Navigation/Footer";
 
-const TermsConditions = () => {
+const TermsAndConditions = () => {
   return (
     <>
       <Header />
-      <div
-        style={{
-          backgroundImage: "url('https://wallpapercave.com/wp/wp6591366.jpg')",
-        }}
-      >
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-white">
-          <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl mb-10">
-            Terms &amp; Conditions
-          </h1>
-          <div className="prose prose-lg">
-            <p>
-              Welcome to CodeHat! Please read these Terms &amp; Conditions
-              carefully before using our web-based coding platform. By using our
-              platform, you agree to these terms and conditions in full. If you
-              do not agree with any part of these terms, you should not use our
-              platform.
-            </p>
-            <h2 className="text-xl font-bold leading-tight tracking-tight text-gray-900 mt-8 mb-4">
-              1. Scope of Agreement
-            </h2>
-            <p>
-              CodeHat is a web-based platform that provides a range of coding
-              tools, resources, and services to users. This agreement sets forth
-              the terms and conditions governing your use of the CodeHat
-              platform.
-            </p>
-            <h2 className="text-xl font-bold leading-tight tracking-tight text-gray-900 mt-8 mb-4">
-              2. Account Registration and Security
-            </h2>
-            <p>
-              To use our platform, you must create an account by providing
-              accurate and complete information. You must also maintain the
-              confidentiality of your account information and are responsible
-              for all activities that occur under your account. You agree to
-              immediately notify us of any unauthorized use of your account.
-            </p>
-            <h2 className="text-xl font-bold leading-tight tracking-tight text-gray-900 mt-8 mb-4">
-              3. Use of the Platform
-            </h2>
-            <p>
-              CodeHat grants you a non-exclusive, non-transferable, revocable
-              license to access and use our platform solely for your personal or
-              internal business purposes. You agree to use our platform only for
-              lawful purposes and in a manner consistent with all applicable
-              laws and regulations. You agree not to engage in any conduct that
-              could damage, disable, or impair the functionality or security of
-              our platform.
-            </p>
-            <h2 className="text-xl font-bold leading-tight tracking-tight text-gray-900 mt-8 mb-4">
-              4. Content Ownership and Use
-            </h2>
-            <p>
-              You retain all ownership rights in any content that you upload,
-              post, or transmit to our platform. By posting content, you grant
-              CodeHat a non-exclusive, royalty-free, worldwide, perpetual, and
-              irrevocable license to use, reproduce, modify, adapt, publish,
-              translate, distribute, and display such content in connection with
-              our platform.
-            </p>
-            <h2 className="text-xl font-bold leading-tight tracking-tight text-gray-900 mt-8 mb-4">
-              5. Intellectual Property
-            </h2>
-            <p>
-              The CodeHat platform and all content and materials included on our
-              platform, including but not limited to text, graphics, logos,
-              images, and software, are the property
-            </p>
-          </div>
+      <main className="bg-white min-h-screen py-16 px-6 font-inter text-gray-900">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-3xl font-bold mb-2">Terms of Service</h1>
+          <h2 className="text-gray-500 font-medium text-base mb-8 italic">
+            Effective as of July 2025
+          </h2>
+
+          <p className="text-[0.95rem] leading-relaxed mb-4">
+            By accessing or using <span className="font-semibold">CodeHat</span>
+            , you agree to be bound by these Terms of Service. Please read them
+            carefully.
+          </p>
+
+          <hr className="my-5 border-gray-400" />
+
+          <h3 className="text-lg font-semibold mb-2">1. Acceptance of Terms</h3>
+          <p className="text-[0.95rem] leading-relaxed mb-5">
+            By creating an account or using any part of the CodeHat platform,
+            you acknowledge that you have read, understood, and agree to comply
+            with these Terms.
+          </p>
+
+          <h3 className="text-lg font-semibold mb-2">
+            2. User Responsibilities
+          </h3>
+          <p className="text-[0.95rem] leading-relaxed mb-5">
+            You agree to use the platform respectfully, without engaging in
+            activities such as spamming, harassment, or intellectual property
+            violations.
+          </p>
+
+          <h3 className="text-lg font-semibold mb-2">3. Content Ownership</h3>
+          <p className="text-[0.95rem] leading-relaxed mb-5">
+            You retain ownership of the content you create, but by posting on
+            CodeHat, you grant us a non-exclusive license to display, modify, or
+            distribute your content as part of our platform services.
+          </p>
+
+          <h3 className="text-lg font-semibold mb-2">4. Modifications</h3>
+          <p className="text-[0.95rem] leading-relaxed mb-5">
+            We may update these Terms from time to time. Changes will be posted
+            on this page, and your continued use of CodeHat implies acceptance
+            of the updated terms.
+          </p>
+
+          <h3 className="text-lg font-semibold mb-2">5. Termination</h3>
+          <p className="text-[0.95rem] leading-relaxed mb-5">
+            We reserve the right to suspend or terminate your account if you
+            violate these Terms or engage in harmful behavior on the platform.
+          </p>
+
+          <h3 className="text-lg font-semibold mb-2">6. Contact Us</h3>
+          <p className="text-[0.95rem] leading-relaxed mb-5">
+            If you have any questions or concerns about these Terms, please
+            contact us at{" "}
+            <span className="italic">
+              <a href="mailto:hapticfeedbak@proton.me">
+                hapticfeedbak@proton.me
+              </a>
+            </span>
+            .
+          </p>
+
+          <p className="text-sm text-gray-500 mt-10 italic">
+            Last updated: July 2025
+          </p>
         </div>
-      </div>
+      </main>
       <Footer />
     </>
   );
 };
 
-export default TermsConditions;
+export default TermsAndConditions;

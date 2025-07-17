@@ -1,4 +1,4 @@
-// Updated ProblemSolution.jsx styled to match ProblemSolver.jsx
+// Updated ProblemSolution.jsx with authentication
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
@@ -7,6 +7,18 @@ import { tomorrow } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 import Header from "../../components/Navigation/Header";
 import Footer from "../../components/Navigation/Footer";
+import { auth } from "../../Firebase"; // Add this import
+import NoLoginError from "../../errors/NoLoginError"; // Add this import
+import { css } from "@emotion/react"; // Add this import
+import { ScaleLoader } from "react-spinners"; // Add this import
+import DisplayQuotes from "../../components/LoadingScreen/DisplayQuotes"; // Add this import
+
+// Add the loading spinner override
+const override = css`
+  display: block;
+  margin: 0 auto;
+  border-color: red;
+`;
 
 const CodeBlock = ({ node, inline, className, children }) => {
   const match = /language-(\w+)/.exec(className || "");
@@ -41,27 +53,86 @@ const getDifficultyColor = (difficulty) => {
 
 function ProblemSolution() {
   const { id } = useParams();
+
+  // Add authentication state
+  const [user, setUser] = useState(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+
+  // Existing state variables
   const [solution, setSolution] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("problem");
   const backend_api = import.meta.env.VITE_BACKEND_API;
 
+  // Add authentication check
   useEffect(() => {
-    const fetchSolution = async () => {
-      try {
-        const res = await fetch(`${backend_api}/api/problems/${id}/solution`);
-        if (!res.ok) throw new Error("Solution not found or failed to load.");
-        const data = await res.json();
-        setSolution(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+    const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
+      if (authUser) {
+        setUser(authUser);
+        // Only fetch solution if user is authenticated
+        if (id) {
+          await fetchSolution();
+        }
+      } else {
+        setUser(null);
+        setLoading(false); // Stop loading if no user
       }
-    };
-    fetchSolution();
+      setTimeout(() => {
+        setIsLoadingAuth(false);
+      }, 2000);
+    });
+
+    return () => unsubscribe();
   }, [id]);
+
+  // Modified fetchSolution function
+  const fetchSolution = async () => {
+    try {
+      const res = await fetch(`${backend_api}/api/problems/${id}/solution`);
+      if (!res.ok) throw new Error("Solution not found or failed to load.");
+      const data = await res.json();
+      setSolution(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add loading screen for authentication
+  if (isLoadingAuth) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen flex flex-col">
+          <main className="flex-grow">
+            <div className="flex justify-center items-center h-screen">
+              <ScaleLoader
+                css={override}
+                size={100}
+                color={"#123abc"}
+                loading={isLoadingAuth}
+              />
+              <DisplayQuotes />
+            </div>
+          </main>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  // Show NoLoginError if user is not authenticated
+  if (!user) {
+    return (
+      <>
+        <Header />
+        <NoLoginError />
+        <Footer />
+      </>
+    );
+  }
 
   if (loading) {
     return (

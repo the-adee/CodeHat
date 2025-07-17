@@ -104,28 +104,27 @@ export default function Header() {
                           </Menu.Item>
                           <Menu.Item>
                             {({ active }) => (
-                              <Link
-                                to="/java"
+                              <span
+                                title="Coming Soon"
                                 className={classNames(
-                                  active ? "bg-gray-300" : "",
-                                  "block px-4 py-2 text-sm text-gray-800"
+                                  "block px-4 py-2 text-sm text-gray-400 cursor-not-allowed"
                                 )}
                               >
-                                Java
-                              </Link>
+                                Java (Coming Soon)
+                              </span>
                             )}
                           </Menu.Item>
+
                           <Menu.Item>
                             {({ active }) => (
-                              <Link
-                                to="/cpp"
+                              <span
+                                title="Coming Soon"
                                 className={classNames(
-                                  active ? "bg-gray-300" : "",
-                                  "block px-4 py-2 text-sm text-gray-800"
+                                  "block px-4 py-2 text-sm text-gray-400 cursor-not-allowed"
                                 )}
                               >
-                                C++
-                              </Link>
+                                C++ (Coming Soon)
+                              </span>
                             )}
                           </Menu.Item>
                         </Menu.Items>
@@ -136,8 +135,9 @@ export default function Header() {
               </div>
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
                 <Link
-                  to="/search2"
+                  to="#"
                   className="rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                  title="Work in Progress..."
                 >
                   <span className="sr-only">Search</span>
                   <svg
@@ -262,28 +262,27 @@ export default function Header() {
                     </Menu.Item>
                     <Menu.Item>
                       {({ active }) => (
-                        <Link
-                          to="/java"
+                        <span
+                          title="Coming Soon"
                           className={classNames(
-                            active ? "bg-gray-300" : "",
-                            "block px-4 py-2 text-sm text-gray-800"
+                            "block px-4 py-2 text-sm text-gray-400 cursor-not-allowed"
                           )}
                         >
-                          Java
-                        </Link>
+                          Java (Coming Soon)
+                        </span>
                       )}
                     </Menu.Item>
+
                     <Menu.Item>
                       {({ active }) => (
-                        <Link
-                          to="/cpp"
+                        <span
+                          title="Coming Soon"
                           className={classNames(
-                            active ? "bg-gray-300" : "",
-                            "block px-4 py-2 text-sm text-gray-800"
+                            "block px-4 py-2 text-sm text-gray-400 cursor-not-allowed"
                           )}
                         >
-                          C++
-                        </Link>
+                          C++ (Coming Soon)
+                        </span>
                       )}
                     </Menu.Item>
                   </Menu.Items>

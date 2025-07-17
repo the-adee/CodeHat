@@ -5,24 +5,52 @@ import { Link } from "react-router-dom";
 import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../Firebase";
 import ReCAPTCHA from "react-google-recaptcha";
+import Alert from "../../components/UI/Alert";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false); // Add loading state
+  const [loading, setLoading] = useState(false);
+
+  // Add alert state management
+  const [alert, setAlert] = useState({
+    show: false,
+    type: "info",
+    message: "",
+  });
+
   const recaptcha = useRef();
   const site_Key = import.meta.env.VITE_SITE_KEY;
   const backend_api = import.meta.env.VITE_BACKEND_API;
 
+  // Helper function to show alerts
+  const showAlert = (type, message, autoClose = true) => {
+    setAlert({
+      show: true,
+      type,
+      message,
+    });
+
+    if (autoClose) {
+      setTimeout(() => {
+        setAlert((prev) => ({ ...prev, show: false }));
+      }, 5000);
+    }
+  };
+
   async function submitForm(event) {
     event.preventDefault();
     const captchaValue = recaptcha.current.getValue();
-    if (!captchaValue) {
-      alert("Please verify the reCAPTCHA!");
-    } else {
-      setLoading(true); // Set loading to true when the form is submitted
 
+    if (!captchaValue) {
+      showAlert("warning", "Please verify the reCAPTCHA!");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
       const res = await fetch(`${backend_api}/verify`, {
         method: "POST",
         body: JSON.stringify({ captchaValue }),
@@ -32,32 +60,37 @@ const LoginPage = () => {
       });
 
       const data = await res.json();
+
       if (data.success) {
-        // make form submission
+        // Show loading message
+        showAlert("info", "Verifying credentials...", false);
+
         signInWithEmailAndPassword(auth, email, password)
           .then((userCredential) => {
-            alert("Login successful! Redirecting to practice page...");
-            setLoading(false); // Reset loading to false when the login process is complete
-            if (
-              onAuthStateChanged(auth, (user) => {
-                if (user) {
-                  window.location.href = "/practice";
-                } else {
-                  console.log("No user is signed in.");
-                }
-              })
+            showAlert(
+              "success",
+              "Login successful! Redirecting to practice page..."
             );
+            setLoading(false);
+
+            // Redirect after showing success message
+            setTimeout(() => {
+              window.location.href = "/practice";
+            }, 1500);
           })
           .catch((error) => {
-            alert("Invalid email or password!");
-            // console.log(error);
-            setLoading(false); // Reset loading to false in case of an error
+            showAlert("error", "Invalid email or password!");
+            setLoading(false);
           });
       } else {
-        alert("reCAPTCHA validation failed!");
-        setLoading(false); // Reset loading to false if validation fails
+        showAlert("error", "reCAPTCHA validation failed!");
+        setLoading(false);
       }
+    } catch (error) {
+      showAlert("error", "Network error. Please try again.");
+      setLoading(false);
     }
+
     recaptcha.current.reset();
   }
 
@@ -80,6 +113,21 @@ const LoginPage = () => {
               CodeHat™
             </span>
           </a>
+
+          {/* Alert Component - Place it here for better visibility */}
+          {alert.show && (
+            <div className="w-full sm:max-w-md mb-4">
+              <Alert
+                type={alert.type}
+                message={alert.message}
+                show={alert.show}
+                onClose={() => setAlert((prev) => ({ ...prev, show: false }))}
+                autoClose={alert.type === "success" || alert.type === "error"}
+                duration={alert.type === "success" ? 3000 : 5000}
+              />
+            </div>
+          )}
+
           <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
             <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
               <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-black">
@@ -91,9 +139,10 @@ const LoginPage = () => {
                 action="#"
                 method="POST"
               >
+                {/* Your existing form fields remain the same */}
                 <div>
                   <label
-                    for="email"
+                    htmlFor="email"
                     className="block mb-2 text-sm font-medium text-gray-900 dark:text-black"
                   >
                     Your email
@@ -109,6 +158,7 @@ const LoginPage = () => {
                     required
                   />
                 </div>
+
                 <div>
                   <label
                     htmlFor="password"
@@ -116,8 +166,6 @@ const LoginPage = () => {
                   >
                     Password
                   </label>
-
-                  {/* 🟨 Relative container wraps both input and icon button */}
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
@@ -129,20 +177,19 @@ const LoginPage = () => {
                       className="bg-white border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-black dark:focus:ring-blue-500 dark:focus:border-blue-500"
                       required
                     />
-
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute inset-y-0 right-3 flex items-center text-gray-600 dark:text-gray-300 focus:outline-none"
                     >
+                      {/* Your existing eye icon SVGs */}
                       {showPassword ? (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="16"
                           height="16"
                           fill="currentColor"
-                          class="bi bi-eye-slash"
-                          className="text-gray-400"
+                          className="bi bi-eye-slash text-gray-400"
                           viewBox="0 0 16 16"
                         >
                           <path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7 7 0 0 0-2.79.588l.77.771A6 6 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755q-.247.248-.517.486z" />
@@ -150,14 +197,12 @@ const LoginPage = () => {
                           <path d="M3.35 5.47q-.27.24-.518.487A13 13 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7 7 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12z" />
                         </svg>
                       ) : (
-                        // Eye SVG
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="16"
                           height="16"
                           fill="currentColor"
-                          class="bi bi-eye"
-                          className="text-gray-500"
+                          className="bi bi-eye text-gray-500"
                           viewBox="0 0 16 16"
                         >
                           <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z" />
@@ -176,18 +221,18 @@ const LoginPage = () => {
                         aria-describedby="remember"
                         type="checkbox"
                         className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800"
-                        required=""
                       />
                     </div>
                     <div className="ml-3 text-sm">
                       <label
-                        for="remember"
+                        htmlFor="remember"
                         className="text-black dark:text-gray-300"
                       >
                         Remember me
                       </label>
                     </div>
                   </div>
+
                   <a
                     href="#"
                     className="text-black font-medium text-primary-600 hover:underline dark:text-primary-500"
@@ -195,6 +240,7 @@ const LoginPage = () => {
                     Forgot password?
                   </a>
                 </div>
+
                 <button
                   type="submit"
                   className={`w-full text-white bg-blue-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 ${
@@ -204,11 +250,13 @@ const LoginPage = () => {
                 >
                   {loading ? "Logging in..." : "Log in"}
                 </button>
+
                 <div className="transform scale-75 sm:scale-100 origin-left">
                   <ReCAPTCHA ref={recaptcha} sitekey={site_Key} />
                 </div>
+
                 <p className="text-sm font-light text-black dark:text-gray-400">
-                  Don’t have an account yet?{" "}
+                  Don't have an account yet?{" "}
                   <Link
                     to="/register"
                     className="font-medium text-primary-600 hover:underline dark:text-primary-500"

@@ -7,8 +7,18 @@ import { tomorrow } from "react-syntax-highlighter/dist/esm/styles/prism";
 import PythonEditor from "../../components/CodeEditor/PythonEditor";
 import Header from "../../components/Navigation/Header";
 import Footer from "../../components/Navigation/Footer";
+import { auth } from "../../Firebase";
+import NoLoginError from "../../errors/NoLoginError";
+import { css } from "@emotion/react";
+import { ScaleLoader } from "react-spinners";
+import DisplayQuotes from "../../components/LoadingScreen/DisplayQuotes";
 
-// Add this component after your imports
+const override = css`
+  display: block;
+  margin: 0 auto;
+  border-color: red;
+`;
+
 const SafeMarkdown = ({ content }) => {
   const [renderError, setRenderError] = useState(false);
 
@@ -53,6 +63,8 @@ const SafeMarkdown = ({ content }) => {
 
 function ProblemSolver() {
   const { id } = useParams();
+  const [user, setUser] = useState(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [problem, setProblem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -66,12 +78,29 @@ function ProblemSolver() {
   const [customOutput, setCustomOutput] = useState("");
   const backend_api = import.meta.env.VITE_BACKEND_API;
 
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
+      if (authUser) {
+        setUser(authUser);
+        // Only fetch problem if user is authenticated
+        if (id) {
+          await fetchProblem();
+        }
+      } else {
+        setUser(null);
+        setLoading(false); // Stop loading if no user
+      }
+      setTimeout(() => {
+        setIsLoadingAuth(false);
+      }, 2000);
+    });
+
+    return () => unsubscribe();
+  }, [id]);
+
   // Add this right after your state declarations
   useEffect(() => {
     const handleError = (event) => {
-      console.error("=== REACT ERROR ===");
-      console.error("Error:", event.error);
-      console.error("Stack:", event.error?.stack);
       setError("React rendering error: " + event.error?.message);
     };
 
@@ -79,64 +108,27 @@ function ProblemSolver() {
     return () => window.removeEventListener("error", handleError);
   }, []);
 
-  useEffect(() => {
-    fetchProblem();
-  }, [id]);
-
   const fetchProblem = async () => {
-    console.log("=== DEBUG INFO ===");
-    console.log("Problem ID:", id);
-    console.log("Backend API:", backend_api);
-    console.log("Full API URL:", `${backend_api}/api/problems/${id}`);
-
     if (!backend_api) {
-      console.error("VITE_BACKEND_API is not defined!");
       setError("Backend API not configured");
       setLoading(false);
       return;
     }
 
     if (!id) {
-      console.error("No problem ID provided!");
       setError("No problem ID provided");
       setLoading(false);
       return;
     }
 
     try {
-      console.log("Making API request...");
       const response = await fetch(`${backend_api}/api/problems/${id}`);
-      console.log("Response status:", response.status);
-      console.log("Response ok:", response.ok);
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API Error Response:", errorText);
         throw new Error(`Problem not found (${response.status})`);
       }
 
       const data = await response.json();
-      console.log("=== PROBLEM DATA ===");
-      console.log("Full data:", data);
-      console.log("Required fields check:");
-      console.log("- problemId:", data.problemId);
-      console.log("- title:", data.title);
-      console.log("- description:", data.description);
-      console.log("- difficulty:", data.difficulty);
-      console.log("- testCases:", data.testCases);
-      console.log("- testCases length:", data.testCases?.length);
-
-      if (data.testCases && data.testCases.length > 0) {
-        console.log("First test case:", data.testCases[0]);
-      }
-      // Add this right after the "First test case:" log
-      if (data.testCases && data.testCases.length > 0) {
-        console.log("First test case:", data.testCases[0]);
-        console.log("Test case structure check:");
-        console.log("- input:", data.testCases[0].input);
-        console.log("- expectedOutput:", data.testCases[0].expectedOutput);
-        console.log("- isHidden:", data.testCases[0].isHidden);
-      }
 
       setProblem(data);
 
@@ -145,7 +137,6 @@ function ProblemSolver() {
         setCode(data.template);
       }
     } catch (err) {
-      console.error("Fetch error:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -228,6 +219,43 @@ function ProblemSolver() {
         return "bg-gray-50 text-gray-700 border-gray-200";
     }
   };
+
+  if (isLoadingAuth) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen flex flex-col">
+          <main className="flex-grow">
+            <div className="flex justify-center items-center h-screen">
+              <ScaleLoader
+                css={override}
+                size={100}
+                color={"#123abc"}
+                loading={isLoadingAuth}
+              />
+              <DisplayQuotes />
+            </div>
+          </main>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  // Show NoLoginError if user is not authenticated
+  if (!user) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen flex flex-col">
+          <main className="flex-grow">
+            <NoLoginError />
+          </main>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   if (loading) {
     return (

@@ -8,7 +8,6 @@ import Login from "./pages/Auth/LoginPage";
 import Register from "./pages/Auth/RegistrationPage";
 import CreateProfile from "./user-profile/CreateProfile";
 import PracticePage from "./pages/Coding/PracticePage";
-import ProblemDetail from "./pages/Coding/ProblemDetail";
 import ParticipatePage from "./pages/Coding/ParticipatePage";
 import UserProfile from "./user-profile/UserProfile";
 import EditProfile from "./user-profile/EditProfile";
@@ -29,7 +28,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Route path="/register" element={<Register />} />
       <Route path="/createprofile" element={<CreateProfile />} />
       <Route path="/practice" element={<PracticePage />} />
-      <Route path="/problem/:id" element={<ProblemDetail />} />
       <Route path="/participate" element={<ParticipatePage />} />
       <Route path="/userprofile" element={<UserProfile />} />
       <Route path="/updateprofile" element={<EditProfile />} />

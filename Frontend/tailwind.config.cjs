@@ -8,6 +8,9 @@ module.exports = {
         gray7: "#121212",
         "dark-blue": "#2196f3",
       },
+      fontFamily: {
+        inter: ["Inter", "sans-serif"], // ← custom font added here
+      },
     },
   },
   plugins: [require("@tailwindcss/forms")],
