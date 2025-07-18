@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import Header from "../../components/Navigation/Header";
 import Footer from "../../components/Navigation/Footer";
+import Alert from "../../components/UI/Alert";
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
@@ -13,12 +14,52 @@ const RegistrationPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [emailError, setEmailError] = useState(""); // Add email error state
+  const [emailError, setEmailError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Alert state
+  const [alert, setAlert] = useState({
+    show: false,
+    type: "info",
+    message: "",
+  });
+
   const recaptcha = useRef();
   const site_Key = import.meta.env.VITE_SITE_KEY;
   const backend_api = import.meta.env.VITE_BACKEND_API;
+
+  const showAlert = (type, message, autoClose = true) => {
+    setAlert({ show: true, type, message });
+    if (autoClose) {
+      setTimeout(() => {
+        setAlert((prev) => ({ ...prev, show: false }));
+      }, 5000);
+    }
+  };
+
+  // Enhanced password validation
+  const validatePassword = (password) => {
+    const errors = [];
+
+    if (password.length < 8) {
+      errors.push("at least 8 characters");
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push("one lowercase letter");
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push("one uppercase letter");
+    }
+    if (!/\d/.test(password)) {
+      errors.push("one number");
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      errors.push("one special character");
+    }
+
+    return errors;
+  };
 
   const signUp = async (e) => {
     e.preventDefault();
@@ -27,16 +68,19 @@ const RegistrationPage = () => {
     setPasswordError("");
     setEmailError("");
 
-    // Check if the password is at least 6 characters long
-    if (password.length < 6) {
-      setPasswordError("⚠️ Password must be at least 6 characters long.");
+    // Enhanced password validation
+    const passwordErrors = validatePassword(password);
+    if (passwordErrors.length > 0) {
+      setPasswordError(
+        `⚠️ Password must contain: ${passwordErrors.join(", ")}`
+      );
       return;
     }
 
     // Check reCAPTCHA
     const captchaValue = recaptcha.current.getValue();
     if (!captchaValue) {
-      alert("Please verify the reCAPTCHA!");
+      showAlert("warning", "Please verify the reCAPTCHA!");
       return;
     }
 
@@ -54,25 +98,30 @@ const RegistrationPage = () => {
 
       const data = await res.json();
       if (data.success) {
+        showAlert("info", "Creating account...", false);
+
         // Proceed with registration
         createUserWithEmailAndPassword(auth, email, password)
           .then(async (userCredential) => {
             const user = userCredential.user;
 
-            // ✅ Send email verification
+            // Send email verification
             await sendEmailVerification(user);
 
-            alert(
+            showAlert(
+              "success",
               "Registration successful! A verification email has been sent to your inbox. Please verify your email before logging in."
             );
 
             setLoading(false);
 
-            // ✅ Sign out user after registration to prevent unverified access
+            // Sign out user after registration to prevent unverified access
             await auth.signOut();
 
-            // ✅ Redirect to login page
-            window.location.href = "/verify-email";
+            // Redirect to login page after showing success message
+            setTimeout(() => {
+              window.location.href = "/verify-email";
+            }, 3000);
           })
           .catch((error) => {
             console.log(error);
@@ -94,22 +143,23 @@ const RegistrationPage = () => {
                 );
                 break;
               case "auth/network-request-failed":
-                alert(
+                showAlert(
+                  "error",
                   "Network error. Please check your connection and try again."
                 );
                 break;
               default:
-                alert("Registration failed. Please try again.");
+                showAlert("error", "Registration failed. Please try again.");
                 break;
             }
           });
       } else {
-        alert("reCAPTCHA validation failed!");
+        showAlert("error", "reCAPTCHA validation failed!");
         setLoading(false);
       }
     } catch (error) {
       console.error("Error verifying reCAPTCHA:", error);
-      alert("Error verifying reCAPTCHA. Please try again.");
+      showAlert("error", "Error verifying reCAPTCHA. Please try again.");
       setLoading(false);
     }
 
@@ -119,14 +169,29 @@ const RegistrationPage = () => {
   return (
     <>
       <Header />
+
+      {/* Toast-style alert - doesn't affect layout */}
+      {alert.show && (
+        <div className="fixed top-4 right-4 z-50 w-full max-w-sm px-4">
+          <Alert
+            type={alert.type}
+            message={alert.message}
+            show={alert.show}
+            onClose={() => setAlert((prev) => ({ ...prev, show: false }))}
+            autoClose={alert.type === "success" || alert.type === "error"}
+            duration={alert.type === "success" ? 3000 : 5000}
+          />
+        </div>
+      )}
+
       <section
-        className="bg-gray-50 dark:bg-white px-4 lg:px-16 pb-20"
+        className="bg-gray-50 dark:bg-white px-4 lg:px-16 pb-20 min-h-screen flex items-center"
         style={{
           backgroundImage: "linear-gradient(to right, #38a3a5, #57cc99)",
           color: "#fff",
         }}
       >
-        <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
+        <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto w-full lg:py-0">
           <a
             href="#"
             className="flex items-center mb-6 mt-20 text-2xl font-semibold text-gray-900 dark:text-black"
@@ -136,7 +201,7 @@ const RegistrationPage = () => {
             </span>
           </a>
 
-          <div className="w-full  bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
+          <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
             <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
               <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-black">
                 Create your account
@@ -175,7 +240,6 @@ const RegistrationPage = () => {
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
-                      // Clear email error when user starts typing
                       if (emailError) setEmailError("");
                     }}
                     name="email"
@@ -186,27 +250,30 @@ const RegistrationPage = () => {
                     placeholder="abc@gmail.com"
                     required
                   />
-                  {/* Display email error message */}
                   {emailError && (
                     <p className="text-sm mt-2 animate-pulse text-red-500">
                       {emailError}
                     </p>
                   )}
                 </div>
+
                 <div>
                   <label
                     htmlFor="password"
                     className="block mb-2 text-sm font-medium text-gray-900 dark:text-black"
                   >
-                    Password (Must be equal 6 characters or more)
+                    Password
                   </label>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                    Must contain: 8+ characters, uppercase, lowercase, number,
+                    and special character
+                  </div>
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => {
                         setPassword(e.target.value);
-                        // Clear password error when user starts typing
                         if (passwordError) setPasswordError("");
                       }}
                       name="password"
@@ -252,13 +319,13 @@ const RegistrationPage = () => {
                     </button>
                   </div>
 
-                  {/* Display password error message OUTSIDE the relative container */}
                   {passwordError && (
                     <p className="text-sm mt-2 animate-pulse text-red-500">
                       {passwordError}
                     </p>
                   )}
                 </div>
+
                 <div className="flex items-start">
                   <div className="flex items-center h-5">
                     <input
@@ -285,7 +352,6 @@ const RegistrationPage = () => {
                   </div>
                 </div>
 
-                {/* reCAPTCHA component */}
                 <div className="transform scale-75 sm:scale-100 origin-left">
                   <ReCAPTCHA ref={recaptcha} sitekey={site_Key} />
                 </div>
@@ -299,6 +365,7 @@ const RegistrationPage = () => {
                 >
                   {loading ? "Creating account..." : "Create an account"}
                 </button>
+
                 <p className="text-sm font-light text-gray-500 dark:text-black">
                   Already have an account?{" "}
                   <Link

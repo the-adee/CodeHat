@@ -16,6 +16,7 @@ import AdminPanel from "./admin/AdminPanel";
 import ProblemSolver from "./pages/Coding/ProblemSolver";
 import ProblemSolution from "./pages/Coding/ProblemSolution";
 import DeleteAccount from "./pages/Auth/DeleteAccount";
+import Goodbye from "./pages/Auth/Goodbye";
 
 import TermsOfService from "./pages/TermsOfService";
 import Vision from "./pages/Vision";
@@ -38,6 +39,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Route path="/solve/:id" element={<ProblemSolver />} />
       <Route path="/solve/:id/solution" element={<ProblemSolution />} />
       <Route path="/delete-account" element={<DeleteAccount />} />
+      <Route path="/goodbye" element={<Goodbye />} />
 
       <Route path="/termsofservice" element={<TermsOfService />} />
       <Route path="/vision" element={<Vision />} />

@@ -118,14 +118,29 @@ const LoginPage = () => {
   return (
     <>
       <Header />
+
+      {/* Toast-style alert - doesn't affect layout */}
+      {alert.show && (
+        <div className="fixed top-4 right-4 z-50 w-full max-w-sm px-4">
+          <Alert
+            type={alert.type}
+            message={alert.message}
+            show={alert.show}
+            onClose={() => setAlert((prev) => ({ ...prev, show: false }))}
+            autoClose={alert.type === "success" || alert.type === "error"}
+            duration={alert.type === "success" ? 3000 : 5000}
+          />
+        </div>
+      )}
+
       <section
-        className="bg-gray-50 dark:bg-white-900 px-4 lg:px-16"
+        className="bg-gray-50 dark:bg-white-900 px-4 lg:px-16 min-h-screen flex items-center"
         style={{
           backgroundImage: "linear-gradient(to right, #38a3a5, #57cc99)",
           color: "#fff",
         }}
       >
-        <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
+        <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto w-full lg:py-0">
           <a
             href="#"
             className="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-black"
@@ -134,19 +149,6 @@ const LoginPage = () => {
               CodeHat™
             </span>
           </a>
-
-          {alert.show && (
-            <div className="w-full sm:max-w-md mb-4">
-              <Alert
-                type={alert.type}
-                message={alert.message}
-                show={alert.show}
-                onClose={() => setAlert((prev) => ({ ...prev, show: false }))}
-                autoClose={alert.type === "success" || alert.type === "error"}
-                duration={alert.type === "success" ? 3000 : 5000}
-              />
-            </div>
-          )}
 
           <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
             <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
@@ -159,7 +161,6 @@ const LoginPage = () => {
                 action="#"
                 method="POST"
               >
-                {/* form fields unchanged */}
                 <div>
                   <label
                     htmlFor="email"

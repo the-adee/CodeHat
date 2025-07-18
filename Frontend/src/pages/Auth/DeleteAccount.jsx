@@ -4,21 +4,45 @@ import Footer from "../../components/Navigation/Footer";
 import { auth } from "../../Firebase";
 import { useNavigate } from "react-router-dom";
 import NoUserError from "../../errors/NoUserError";
+import { ScaleLoader } from "react-spinners";
+import Alert from "../../components/UI/Alert";
+
+const override = {
+  display: "block",
+  margin: "0 auto",
+  borderColor: "red",
+};
 
 const DeleteAccount = () => {
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("");
   const [confirmationText, setConfirmationText] = useState("");
   const [user, setUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
   const navigate = useNavigate();
   const backend_api = import.meta.env.VITE_BACKEND_API;
 
+  const [alert, setAlert] = useState({
+    show: false,
+    type: "info",
+    message: "",
+  });
+
   const REQUIRED_PHRASE = "Delete My Account";
+
+  const showAlert = (type, message, autoClose = true) => {
+    setAlert({ show: true, type, message });
+    if (autoClose) {
+      setTimeout(() => {
+        setAlert((prev) => ({ ...prev, show: false }));
+      }, 5000);
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
       setUser(firebaseUser);
+      setLoadingUser(false); // done loading
     });
 
     return () => unsubscribe();
@@ -26,49 +50,92 @@ const DeleteAccount = () => {
 
   const handleDelete = async () => {
     setLoading(true);
-    setStatus("");
 
     if (!user) {
-      setStatus("No user is currently signed in.");
+      showAlert("error", "No user is currently signed in.");
       setLoading(false);
       return;
     }
 
     try {
-      // Step 1: Delete user data from MongoDB
+      showAlert("info", "Deleting your account...", false);
+
+      // Step 1: First try to delete Firebase Auth account to check if re-authentication is needed
+      await user.delete();
+
+      // Step 2: Only delete MongoDB data if Firebase deletion was successful
       await fetch(`${backend_api}/deleteuseraccount?email=${user.email}`, {
         method: "DELETE",
       });
 
-      // Step 2: Delete Firebase Auth account
-      await user.delete();
-
-      setStatus("Account deleted successfully.");
-      setTimeout(() => navigate("/login"), 2000);
+      // In DeleteAccount.jsx, update the navigation:
+      showAlert("success", "Account deleted successfully. Redirecting...");
+      setTimeout(() => {
+        navigate("/goodbye", {
+          state: { fromDeletion: true },
+          replace: true,
+        });
+      }, 2000);
     } catch (error) {
       if (error.code === "auth/requires-recent-login") {
-        setStatus("Please re-authenticate before deleting your account.");
+        showAlert(
+          "warning",
+          "Please re-authenticate before deleting your account. Sign out and sign in again, then try deleting your account."
+        );
       } else {
-        setStatus("An error occurred. Try again later.");
+        showAlert("error", "An error occurred. Please try again later.");
+        console.error("Delete account error:", error);
       }
     }
 
     setLoading(false);
   };
 
-  if (!user)
+  if (loadingUser) {
     return (
       <>
         <Header />
+        <main className="min-h-screen flex justify-center items-center">
+          <ScaleLoader
+            cssOverride={override}
+            size={100}
+            color={"#123abc"}
+            loading={loadingUser}
+          />
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
+  if (!user) {
+    return (
+      <>
+        <Header />
         <NoUserError />
         <Footer />
       </>
     );
+  }
 
   return (
     <>
       <Header />
+
+      {/* Toast-style alert - doesn't affect layout */}
+      {alert.show && (
+        <div className="fixed top-4 right-4 z-50 w-full max-w-sm px-4">
+          <Alert
+            type={alert.type}
+            message={alert.message}
+            show={alert.show}
+            onClose={() => setAlert((prev) => ({ ...prev, show: false }))}
+            autoClose={alert.type === "success" || alert.type === "error"}
+            duration={alert.type === "success" ? 3000 : 5000}
+          />
+        </div>
+      )}
+
       <main className="bg-white min-h-screen py-16 px-6 font-inter text-gray-900">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-3xl font-bold mb-2">Delete Account</h1>
@@ -79,7 +146,7 @@ const DeleteAccount = () => {
           <p className="text-[0.95rem] leading-relaxed mb-5">
             Deleting your account will permanently erase your authentication
             credentials and remove all your profile information stored with us.
-            You won’t be able to recover your data after this action.
+            You won't be able to recover your data after this action.
           </p>
 
           {!confirming ? (
@@ -124,17 +191,13 @@ const DeleteAccount = () => {
                   onClick={() => {
                     setConfirming(false);
                     setConfirmationText("");
-                    setStatus("");
+                    setAlert((prev) => ({ ...prev, show: false }));
                   }}
                 >
                   Cancel
                 </button>
               </div>
             </div>
-          )}
-
-          {status && (
-            <p className="mt-5 text-sm text-gray-600 italic">{status}</p>
           )}
         </div>
       </main>
