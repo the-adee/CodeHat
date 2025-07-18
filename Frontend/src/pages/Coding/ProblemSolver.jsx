@@ -61,6 +61,40 @@ const SafeMarkdown = ({ content }) => {
   }
 };
 
+// Helper function to format values for display
+const formatValue = (value) => {
+  if (value === null || value === undefined) {
+    return "null";
+  }
+  if (typeof value === "string") {
+    return `"${value}"`;
+  }
+  if (typeof value === "object") {
+    return JSON.stringify(value, null, 2);
+  }
+  return String(value);
+};
+
+// Helper function to format function signature
+const formatFunctionSignature = (functionSignature, testCase) => {
+  if (!functionSignature || !functionSignature.name) {
+    return "def solution():";
+  }
+
+  const funcName = functionSignature.name;
+  const params = functionSignature.parameters || [];
+
+  if (params.length === 0 && testCase?.input) {
+    // If no parameters defined but input exists, use input keys
+    const inputKeys =
+      typeof testCase.input === "object" ? Object.keys(testCase.input) : [];
+    return `def ${funcName}(${inputKeys.join(", ")}):`;
+  }
+
+  const paramStrings = params.map((param) => `${param.name}: ${param.type}`);
+  return `def ${funcName}(${paramStrings.join(", ")}):`;
+};
+
 function ProblemSolver() {
   const { id } = useParams();
   const [user, setUser] = useState(null);
@@ -73,7 +107,7 @@ function ProblemSolver() {
   const [testResults, setTestResults] = useState([]);
   const [output, setOutput] = useState("");
   const [activeTab, setActiveTab] = useState("problem");
-  const [rightPanelTab, setRightPanelTab] = useState("editor"); // New state for right panel tabs
+  const [rightPanelTab, setRightPanelTab] = useState("editor");
   const [customInput, setCustomInput] = useState("");
   const [customOutput, setCustomOutput] = useState("");
   const backend_api = import.meta.env.VITE_BACKEND_API;
@@ -82,13 +116,12 @@ function ProblemSolver() {
     const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
       if (authUser) {
         setUser(authUser);
-        // Only fetch problem if user is authenticated
         if (id) {
           await fetchProblem();
         }
       } else {
         setUser(null);
-        setLoading(false); // Stop loading if no user
+        setLoading(false);
       }
       setTimeout(() => {
         setIsLoadingAuth(false);
@@ -98,7 +131,6 @@ function ProblemSolver() {
     return () => unsubscribe();
   }, [id]);
 
-  // Add this right after your state declarations
   useEffect(() => {
     const handleError = (event) => {
       setError("React rendering error: " + event.error?.message);
@@ -129,7 +161,6 @@ function ProblemSolver() {
       }
 
       const data = await response.json();
-
       setProblem(data);
 
       // Set initial code template if available
@@ -151,7 +182,7 @@ function ProblemSolver() {
 
     setIsRunning(true);
     setCustomOutput("");
-    setRightPanelTab("io"); // Switch to I/O tab when running code
+    setRightPanelTab("io");
 
     try {
       const response = await fetch(`${backend_api}/py`, {
@@ -179,7 +210,7 @@ function ProblemSolver() {
 
     setIsRunning(true);
     setTestResults([]);
-    setRightPanelTab("io"); // Switch to I/O tab when running tests
+    setRightPanelTab("io");
 
     try {
       const response = await fetch(`${backend_api}/api/problems/${id}/test`, {
@@ -242,7 +273,6 @@ function ProblemSolver() {
     );
   }
 
-  // Show NoLoginError if user is not authenticated
   if (!user) {
     return (
       <>
@@ -357,6 +387,20 @@ function ProblemSolver() {
                 >
                   Test Cases
                 </button>
+                {problem?.hints &&
+                  problem.hints.length > 0 &&
+                  problem.hints[0] && (
+                    <button
+                      onClick={() => setActiveTab("hints")}
+                      className={`px-6 py-3 text-sm font-medium transition-all duration-200 ${
+                        activeTab === "hints"
+                          ? "border-b-2 border-blue-500 text-blue-600 bg-white"
+                          : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      Hints
+                    </button>
+                  )}
               </div>
 
               {/* Tab Content */}
@@ -366,13 +410,27 @@ function ProblemSolver() {
                     <div className="prose max-w-none prose-slate prose-headings:text-gray-900 prose-p:text-gray-700 prose-code:text-blue-600 prose-code:bg-blue-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded">
                       {problem?.description ? (
                         <div>
-                          {/* Try rendering with ReactMarkdown, fallback to plain text */}
                           <SafeMarkdown content={problem.description} />
                         </div>
                       ) : (
                         <p className="text-gray-500">
                           No description available
                         </p>
+                      )}
+
+                      {/* Function Signature */}
+                      {problem?.functionSignature && (
+                        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                          <h3 className="text-lg font-semibold mb-3 text-blue-900">
+                            Function Signature:
+                          </h3>
+                          <pre className="bg-white p-3 rounded-md border border-blue-300 text-sm font-mono text-gray-800 overflow-x-auto">
+                            {formatFunctionSignature(
+                              problem.functionSignature,
+                              problem.testCases?.[0]
+                            )}
+                          </pre>
+                        </div>
                       )}
 
                       {problem?.constraints && (
@@ -412,7 +470,9 @@ function ProblemSolver() {
                                     Input:
                                   </label>
                                   <pre className="bg-white p-3 rounded-md border border-gray-300 text-sm font-mono text-gray-800 overflow-x-auto">
-                                    {testCase?.input || "No input provided"}
+                                    {testCase?.input !== undefined
+                                      ? formatValue(testCase.input)
+                                      : "No input provided"}
                                   </pre>
                                 </div>
                                 <div>
@@ -420,8 +480,9 @@ function ProblemSolver() {
                                     Expected Output:
                                   </label>
                                   <pre className="bg-white p-3 rounded-md border border-gray-300 text-sm font-mono text-gray-800 overflow-x-auto">
-                                    {testCase?.expectedOutput ||
-                                      "No expected output"}
+                                    {testCase?.expectedOutput !== undefined
+                                      ? formatValue(testCase.expectedOutput)
+                                      : "No expected output"}
                                   </pre>
                                 </div>
                               </div>
@@ -431,6 +492,54 @@ function ProblemSolver() {
                     ) : (
                       <div className="text-center py-8">
                         <p className="text-gray-500">No test cases available</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === "hints" && (
+                  <div className="p-6">
+                    <h3 className="text-lg font-semibold mb-6 text-gray-900">
+                      Hints
+                    </h3>
+                    {problem?.hints && problem.hints.length > 0 ? (
+                      <div className="space-y-4">
+                        {problem.hints
+                          .filter((hint) => hint && hint.trim())
+                          .map((hint, index) => (
+                            <div
+                              key={index}
+                              className="bg-yellow-50 rounded-lg p-4 border border-yellow-200"
+                            >
+                              <div className="flex items-start">
+                                <div className="flex-shrink-0">
+                                  <svg
+                                    className="w-5 h-5 text-yellow-600 mt-0.5"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                </div>
+                                <div className="ml-3 flex-1">
+                                  <p className="text-sm font-medium text-yellow-800">
+                                    Hint {index + 1}:
+                                  </p>
+                                  <div className="mt-1 text-sm text-yellow-700">
+                                    <SafeMarkdown content={hint} />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">No hints available</p>
                       </div>
                     )}
                   </div>

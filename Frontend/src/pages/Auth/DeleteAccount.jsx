@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import NoUserError from "../../errors/NoUserError";
 import { ScaleLoader } from "react-spinners";
 import Alert from "../../components/UI/Alert";
+import { useRef } from "react";
 
 const override = {
   display: "block",
@@ -21,6 +22,7 @@ const DeleteAccount = () => {
   const [loadingUser, setLoadingUser] = useState(true);
   const navigate = useNavigate();
   const backend_api = import.meta.env.VITE_BACKEND_API;
+  const redirectingRef = useRef(false);
 
   const [alert, setAlert] = useState({
     show: false,
@@ -68,6 +70,9 @@ const DeleteAccount = () => {
         method: "DELETE",
       });
 
+      redirectingRef.current = true;
+      localStorage.setItem("fromDeletion", "true");
+
       // In DeleteAccount.jsx, update the navigation:
       showAlert("success", "Account deleted successfully. Redirecting...");
       setTimeout(() => {
@@ -108,7 +113,7 @@ const DeleteAccount = () => {
     );
   }
 
-  if (!user) {
+  if (!user && !redirectingRef.current) {
     return (
       <>
         <Header />
