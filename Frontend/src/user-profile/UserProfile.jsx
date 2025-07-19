@@ -36,10 +36,17 @@ const ProfilePage = () => {
 
     const fetchProfileData = async () => {
       try {
+        // Get Firebase ID token
+        const token = await user.getIdToken();
+
         const response = await fetch(
           `${backend_api}/user?email=${encodeURIComponent(user.email)}`,
           {
             method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`, // Add Bearer token
+              "Content-Type": "application/json",
+            },
           }
         );
 
@@ -60,7 +67,7 @@ const ProfilePage = () => {
     };
 
     fetchProfileData();
-  }, [user, authLoading]);
+  }, [user, authLoading, backend_api]);
 
   function formatDate(dateString) {
     const dateFromMongoDB = new Date(dateString);
