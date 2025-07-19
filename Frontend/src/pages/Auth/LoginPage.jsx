@@ -70,11 +70,18 @@ const LoginPage = () => {
               return;
             }
 
-            // Check profile existence in backend MongoDB
+            // ✅ GET FIREBASE TOKEN
+            const idToken = await user.getIdToken();
+
+            // ✅ CHECK PROFILE WITH TOKEN (not email in query)
             try {
-              const profileRes = await fetch(
-                `${backend_api}/user?email=${encodeURIComponent(user.email)}`
-              );
+              const profileRes = await fetch(`${backend_api}/user`, {
+                method: "GET",
+                headers: {
+                  Authorization: `Bearer ${idToken}`,
+                  "Content-Type": "application/json",
+                },
+              });
 
               setLoading(false);
 
@@ -91,12 +98,14 @@ const LoginPage = () => {
               } else {
                 showAlert("error", "Unexpected response from server.");
               }
-            } catch {
+            } catch (error) {
+              console.error("Profile check error:", error);
               showAlert("error", "Error checking profile. Try again.");
               setLoading(false);
             }
           })
           .catch((error) => {
+            console.error("Login error:", error);
             showAlert("error", "Invalid email or password!");
             setLoading(false);
           });
@@ -105,6 +114,7 @@ const LoginPage = () => {
         setLoading(false);
       }
     } catch (error) {
+      console.error("Network error:", error);
       showAlert("error", "Network error. Please try again.");
       setLoading(false);
     }
