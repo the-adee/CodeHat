@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { auth } from "../Firebase";
 import NoUserError from "../errors/NoUserError";
 import { ScaleLoader } from "react-spinners";
+import jsPDF from "jspdf";
 
 const ProfilePage = () => {
   const [profileData, setProfileData] = useState(null);
@@ -35,7 +36,6 @@ const ProfilePage = () => {
 
     const fetchProfileData = async () => {
       try {
-        console.log("Fetching profile for email:", user.email);
         const response = await fetch(
           `${backend_api}/user?email=${encodeURIComponent(user.email)}`,
           {
@@ -48,7 +48,6 @@ const ProfilePage = () => {
         }
 
         const data = await response.json();
-        console.log("Profile data received:", data);
         setProfileData(data);
       } catch (err) {
         console.error("Error fetching profile:", err);
@@ -70,6 +69,102 @@ const ProfilePage = () => {
     ).padStart(2, "0")}-${String(dateFromMongoDB.getDate()).padStart(2, "0")}`;
     return formattedDate;
   }
+
+  const downloadPDFProfile = () => {
+    if (!profileData) return;
+
+    const doc = new jsPDF();
+    let y = 10;
+
+    doc.setFontSize(16);
+    doc.text("User Profile", 10, y);
+    y += 10;
+
+    const addLine = (label, value) => {
+      doc.setFontSize(12);
+      doc.text(`${label}: ${value || "N/A"}`, 10, y);
+      y += 7;
+    };
+
+    // Personal Info
+    addLine("Name", `${profileData.C_FName} ${profileData.C_LName}`);
+    addLine("Email", profileData.C_Email);
+    addLine("Phone", profileData.C_PhoneNo);
+    addLine("Gender", profileData.C_Gender);
+    addLine("DOB", formatDate(profileData.C_DOB));
+    addLine("Address", profileData.C_Address);
+    addLine("Tagline", profileData.C_TagLine);
+    addLine("Description", profileData.C_Description);
+    addLine("Account Status", profileData.C_Status ? "Active" : "Inactive");
+
+    y += 5;
+    doc.setFontSize(14);
+    doc.text("Experience", 10, y);
+    y += 7;
+
+    if (
+      Array.isArray(profileData.C_Experience) &&
+      profileData.C_Experience.length > 0
+    ) {
+      profileData.C_Experience.forEach((exp) => {
+        const line = `• ${exp.title} at ${exp.company} (${formatDate(
+          exp.startDate
+        )} - ${exp.isCurrent ? "Present" : formatDate(exp.endDate)})`;
+        const descLines = doc.splitTextToSize(exp.description || "", 180);
+
+        doc.setFontSize(12);
+        doc.text(line, 10, y);
+        y += 6;
+
+        if (descLines.length) {
+          doc.text(descLines, 12, y);
+          y += descLines.length * 6;
+        }
+
+        y += 3;
+      });
+    } else {
+      doc.setFontSize(12);
+      doc.text("No experience data available", 10, y);
+      y += 6;
+    }
+
+    y += 4;
+    doc.setFontSize(14);
+    doc.text("Education", 10, y);
+    y += 7;
+
+    if (
+      Array.isArray(profileData.C_Education) &&
+      profileData.C_Education.length > 0
+    ) {
+      profileData.C_Education.forEach((edu) => {
+        const line = `• ${edu.degree} at ${edu.institution} (${formatDate(
+          edu.startDate
+        )} - ${edu.isOngoing ? "Ongoing" : formatDate(edu.endDate)})`;
+        const descLines = doc.splitTextToSize(edu.description || "", 180);
+
+        doc.setFontSize(12);
+        doc.text(line, 10, y);
+        y += 6;
+
+        if (descLines.length) {
+          doc.text(descLines, 12, y);
+          y += descLines.length * 6;
+        }
+
+        y += 3;
+      });
+    } else {
+      doc.setFontSize(12);
+      doc.text("No education data available", 10, y);
+      y += 6;
+    }
+
+    // Save the file
+    const fileName = `${profileData.C_FName}_${profileData.C_LName}_Profile.pdf`;
+    doc.save(fileName);
+  };
 
   const override = {
     display: "block",
@@ -429,12 +524,7 @@ const ProfilePage = () => {
                         <span>Edit Profile</span>
                       </button>
                       <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(
-                            `https://yourdomain.com/profile/${user?.uid}`
-                          );
-                          alert("Profile link copied to clipboard!");
-                        }}
+                        onClick={downloadPDFProfile}
                         className="flex items-center justify-center text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors"
                       >
                         <svg
@@ -443,9 +533,10 @@ const ProfilePage = () => {
                           fill="currentColor"
                           className="w-4 h-4 mr-1"
                         >
-                          <path d="M13 4.5a2.5 2.5 0 11.702 1.737L6.97 9.604a2.518 2.518 0 010 .792l6.733 3.367a2.5 2.5 0 11-.671 1.341l-6.733-3.367a2.5 2.5 0 110-3.475l6.733-3.367A2.52 2.52 0 0113 4.5z" />
+                          <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03L10.75 11.364V2.75z" />
+                          <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
                         </svg>
-                        <span>Share My Profile</span>
+                        <span>Download Profile</span>
                       </button>
                     </div>
                   )}

@@ -76,9 +76,6 @@ const LoginPage = () => {
                 `${backend_api}/user?email=${encodeURIComponent(user.email)}`
               );
 
-              const profileData = await profileRes.json();
-              console.log(profileData);
-
               setLoading(false);
 
               if (profileRes.status === 200) {

@@ -62,33 +62,35 @@ const ProfileCreationPage = () => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((authUser) => {
+    const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
       if (authUser) {
         setUser(authUser);
         setFormData((prev) => ({ ...prev, C_Email: authUser.email }));
 
-        // 🔍 Check if user already has a profile
-        fetch(`${backend_api}/user?email=${authUser.email}`)
-          .then((res) => {
-            if (res.status === 200) {
-              return res.json();
-            } else {
-              throw new Error("No existing profile");
-            }
-          })
-          .then((existingProfile) => {
-            // ✅ Redirect to update page if profile exists
+        try {
+          // Get Firebase ID token
+          const token = await authUser.getIdToken();
+
+          const response = await fetch(`${backend_api}/user/profile`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (response.status === 200) {
+            const existingProfile = await response.json();
             if (existingProfile) {
               alert("Profile already created!");
               navigate("/updateprofile", { state: existingProfile });
             }
-          })
-          .catch((err) => {
-            console.log("No existing profile — continue creating new one");
-          })
-          .finally(() => {
-            setIsLoading(false);
-          });
+          }
+        } catch (err) {
+          console.error("Error checking profile");
+        } finally {
+          setIsLoading(false);
+        }
       } else {
         setUser(null);
         setIsLoading(false);
@@ -96,7 +98,7 @@ const ProfileCreationPage = () => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [backend_api, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -280,7 +282,7 @@ const ProfileCreationPage = () => {
         throw new Error("Failed to create profile");
       }
     } catch (error) {
-      console.error("Error creating profile:", error);
+      // console.error("Error creating profile:", error);
       alert("Error creating profile. Please try again.");
     } finally {
       setIsSubmitting(false);

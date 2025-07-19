@@ -42,7 +42,7 @@ const ParticipatePage = () => {
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-full transition-all duration-200"
             title="Work in Progress..."
           >
-            Explore Events
+            Coming Soon
           </button>
         </section>
       </main>

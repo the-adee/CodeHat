@@ -124,7 +124,7 @@ const RegistrationPage = () => {
             }, 3000);
           })
           .catch((error) => {
-            console.log(error);
+            // console.log(error);
             setLoading(false);
 
             // Handle different Firebase auth errors
@@ -158,7 +158,7 @@ const RegistrationPage = () => {
         setLoading(false);
       }
     } catch (error) {
-      console.error("Error verifying reCAPTCHA:", error);
+      // console.error("Error verifying reCAPTCHA:", error);
       showAlert("error", "Error verifying reCAPTCHA. Please try again.");
       setLoading(false);
     }
