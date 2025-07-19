@@ -261,6 +261,8 @@ const ProfileCreationPage = () => {
     setIsSubmitting(true);
 
     try {
+      const token = await user.getIdToken();
+
       const cleanedData = {
         ...formData,
         C_Experience: formData.C_Experience.filter((exp) => exp.title.trim()),
@@ -270,6 +272,7 @@ const ProfileCreationPage = () => {
       const response = await fetch(`${backend_api}/users`, {
         method: "POST",
         headers: {
+          Authorization: `Bearer ${token}`, // Add the Bearer token here
           "Content-Type": "application/json",
         },
         body: JSON.stringify(cleanedData),
