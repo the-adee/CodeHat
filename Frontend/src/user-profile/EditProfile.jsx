@@ -282,6 +282,12 @@ const EditProfile = () => {
     setIsSubmitting(true);
 
     try {
+      // Get the token from storage (same logic as your checkAuthentication function)
+      const token =
+        localStorage.getItem("authToken") ||
+        localStorage.getItem("userToken") ||
+        sessionStorage.getItem("authToken");
+
       // Clean the data before sending
       const cleanedData = {
         ...formData,
@@ -290,11 +296,19 @@ const EditProfile = () => {
         _id: location.state?._id, // Include the ID for updates
       };
 
+      // Create headers object
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      // Add Authorization header if token exists
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${backend_api}/users`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: headers,
         body: JSON.stringify(cleanedData),
       });
 
@@ -302,7 +316,14 @@ const EditProfile = () => {
         alert("Profile updated successfully!");
         navigate("/userprofile");
       } else {
-        throw new Error("Failed to update profile");
+        // Handle different error scenarios
+        if (response.status === 401) {
+          alert("Authentication failed. Please log in again.");
+          // Optionally redirect to login page
+          navigate("/login");
+        } else {
+          throw new Error("Failed to update profile");
+        }
       }
     } catch (error) {
       console.error("Error updating profile:", error);
