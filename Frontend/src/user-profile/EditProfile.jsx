@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { css } from "@emotion/react";
 import { ScaleLoader } from "react-spinners";
 import NoUserError from "../errors/NoUserError";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 const override = css`
   display: block;
@@ -67,25 +68,17 @@ const EditProfile = () => {
   }, []);
 
   const checkAuthentication = () => {
-    // Check for authentication
-    const token =
-      localStorage.getItem("authToken") ||
-      localStorage.getItem("userToken") ||
-      sessionStorage.getItem("authToken");
+    const auth = getAuth();
 
-    const userData =
-      localStorage.getItem("userData") || sessionStorage.getItem("userData");
-
-    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-
-    const hasUserData = location.state && location.state.C_Email;
-
-    if (token || userData || isLoggedIn || hasUserData) {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-    }
-    setAuthChecked(true);
+    // Use Firebase auth state instead of localStorage
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
+      setAuthChecked(true);
+    });
   };
 
   useEffect(() => {
@@ -282,33 +275,31 @@ const EditProfile = () => {
     setIsSubmitting(true);
 
     try {
-      // Get the token from storage (same logic as your checkAuthentication function)
-      const token =
-        localStorage.getItem("authToken") ||
-        localStorage.getItem("userToken") ||
-        sessionStorage.getItem("authToken");
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (!user) {
+        alert("User not authenticated. Please log in again.");
+        navigate("/login");
+        return;
+      }
+
+      const idToken = await user.getIdToken();
 
       // Clean the data before sending
       const cleanedData = {
         ...formData,
         C_Experience: formData.C_Experience.filter((exp) => exp.title.trim()),
         C_Education: formData.C_Education.filter((edu) => edu.degree.trim()),
-        _id: location.state?._id, // Include the ID for updates
+        _id: location.state?._id,
       };
-
-      // Create headers object
-      const headers = {
-        "Content-Type": "application/json",
-      };
-
-      // Add Authorization header if token exists
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
 
       const response = await fetch(`${backend_api}/users`, {
         method: "POST",
-        headers: headers,
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(cleanedData),
       });
 
@@ -316,12 +307,12 @@ const EditProfile = () => {
         alert("Profile updated successfully!");
         navigate("/userprofile");
       } else {
-        // Handle different error scenarios
         if (response.status === 401) {
           alert("Authentication failed. Please log in again.");
-          // Optionally redirect to login page
           navigate("/login");
         } else {
+          const errorData = await response.text();
+          console.error("Server error:", errorData);
           throw new Error("Failed to update profile");
         }
       }
