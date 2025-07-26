@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import Header from "../../components/Navigation/Header";
 import Footer from "../../components/Navigation/Footer";
 import { Link } from "react-router-dom";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence } from "firebase/auth";
 import { auth } from "../../Firebase";
 import ReCAPTCHA from "react-google-recaptcha";
 import Alert from "../../components/UI/Alert";
@@ -12,6 +12,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const [alert, setAlert] = useState({
     show: false,
@@ -55,6 +56,15 @@ const LoginPage = () => {
       if (data.success) {
         showAlert("info", "Verifying credentials...", false);
 
+        // Set Firebase persistence based on "Remember Me" checkbox
+        const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+        
+        try {
+          await setPersistence(auth, persistence);
+        } catch (error) {
+          console.error("Error setting persistence:", error);
+        }
+
         signInWithEmailAndPassword(auth, email, password)
           .then(async (userCredential) => {
             const user = userCredential.user;
@@ -70,10 +80,27 @@ const LoginPage = () => {
               return;
             }
 
+            // Handle remember me logic
+            if (rememberMe) {
+              // Store remember me data with timestamp for 14-day expiry
+              const rememberData = {
+                timestamp: Date.now(),
+                email: email,
+                rememberMe: true
+              };
+              localStorage.setItem('rememberMeData', JSON.stringify(rememberData));
+            } else {
+              // Clear any existing remember me data
+              localStorage.removeItem('rememberMeData');
+              
+              // Set session-only flag to ensure logout on window close
+              sessionStorage.setItem('sessionOnly', 'true');
+            }
+
             // ✅ GET FIREBASE TOKEN
             const idToken = await user.getIdToken();
 
-            // ✅ CHECK PROFILE WITH TOKEN (not email in query)
+            // ✅ CHECK PROFILE WITH TOKEN
             try {
               const profileRes = await fetch(`${backend_api}/user`, {
                 method: "GET",
@@ -148,8 +175,8 @@ const LoginPage = () => {
         }}
       >
         <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto w-full lg:py-0">
-          <a
-            href="#"
+          
+          <a href="#"
             className="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-black"
           >
             <span className="flex items-center text-5xl font-extrabold dark:text-white">
@@ -247,6 +274,8 @@ const LoginPage = () => {
                         id="remember"
                         aria-describedby="remember"
                         type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
                         className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800"
                       />
                     </div>
@@ -255,17 +284,17 @@ const LoginPage = () => {
                         htmlFor="remember"
                         className="text-black dark:text-gray-300"
                       >
-                        Remember me
+                        Remember me for 14 days
                       </label>
                     </div>
                   </div>
 
-                  <a
-                    href="#"
+                  
+                  <Link to="/forgot-password"
                     className="text-black font-medium text-primary-600 hover:underline dark:text-primary-500"
                   >
                     Forgot password?
-                  </a>
+                  </Link>
                 </div>
 
                 <button
