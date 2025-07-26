@@ -23,7 +23,7 @@ const formatCodeExecutions = (num) => {
 
 function Footer() {
   const gitHubURL = import.meta.env.VITE_GITHUB;
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  const API_URL = import.meta.env.VITE_BACKEND_API;
   
   const [visitorCount, setVisitorCount] = useState(null);
   const [codeExecutionCount, setCodeExecutionCount] = useState(null);
