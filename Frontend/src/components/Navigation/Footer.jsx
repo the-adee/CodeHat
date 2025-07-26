@@ -1,14 +1,120 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import axios from "axios";
+
+// Helper functions for formatting numbers
+const formatNumber = (num) => {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + 'M';
+  } else if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'K';
+  }
+  return num.toString();
+};
+
+const formatCodeExecutions = (num) => {
+  if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1)} million`;
+  } else if (num >= 1000) {
+    return `${(num / 1000).toFixed(1)} thousand`;
+  }
+  return num.toString();
+};
 
 function Footer() {
   const gitHubURL = import.meta.env.VITE_GITHUB;
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  
+  const [visitorCount, setVisitorCount] = useState(null);
+  const [codeExecutionCount, setCodeExecutionCount] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Track visitor on component mount
+  useEffect(() => {
+    const trackAndFetchData = async () => {
+      try {
+        // Track visitor
+        let visitorId = localStorage.getItem('visitorId');
+        
+        if (!visitorId) {
+          visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          localStorage.setItem('visitorId', visitorId);
+        }
+        
+        await axios.post(`${API_URL}/api/track-visitor`, {
+          visitorId
+        });
+
+        // Fetch counts
+        const [visitorRes, executionRes] = await Promise.all([
+          axios.get(`${API_URL}/api/visitor-count`),
+          axios.get(`${API_URL}/api/code-execution-count`)
+        ]);
+
+        setVisitorCount(visitorRes.data.count);
+        setCodeExecutionCount(executionRes.data.count);
+      } catch (error) {
+        console.error('Error fetching counts:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    trackAndFetchData();
+
+    // Refresh counts every 30 seconds
+    const interval = setInterval(async () => {
+      try {
+        const [visitorRes, executionRes] = await Promise.all([
+          axios.get(`${API_URL}/api/visitor-count`),
+          axios.get(`${API_URL}/api/code-execution-count`)
+        ]);
+        setVisitorCount(visitorRes.data.count);
+        setCodeExecutionCount(executionRes.data.count);
+      } catch (error) {
+        console.error('Error refreshing counts:', error);
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [API_URL]);
+
   return (
     <footer className="bg-black dark:bg-gray-900 w-full mt-auto">
       <div className="mx-auto w-full container p-4 sm:p-6">
+        {/* Stats Section - New Addition */}
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+          <div className="flex items-center space-x-3 text-gray-400">
+            <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+            </svg>
+            <span className="text-sm">
+              {loading ? (
+                <span className="inline-block w-20 h-4 bg-gray-700 rounded animate-pulse"></span>
+              ) : (
+                <>Visited by over <span className="font-semibold text-white">{formatNumber(visitorCount)}</span> people</>
+              )}
+            </span>
+          </div>
+          
+          <div className="flex items-center space-x-3 text-gray-400">
+            <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+            <span className="text-sm">
+              {loading ? (
+                <span className="inline-block w-32 h-4 bg-gray-700 rounded animate-pulse"></span>
+              ) : (
+                <>Over <span className="font-semibold text-white">{formatCodeExecutions(codeExecutionCount)}</span> lines of code executed</>
+              )}
+            </span>
+          </div>
+        </div>
+
         <div className="md:flex md:justify-between">
           <div className="mb-6 md:mb-0">
             <Link to="/" className="flex items-center">
-              {/* <img src="https://flowbite.com/docs/images/logo.svg" className="h-8 mr-3" alt="FlowBite Logo" /> */}
               <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">
                 CodeHat
               </span>
@@ -21,21 +127,21 @@ function Footer() {
               </h2>
               <ul className="text-gray-600 dark:text-gray-400">
                 <li className="mb-4">
-                  <a
-                    href="https://ocw.mit.edu/courses/6-0001-introduction-to-computer-science-and-programming-in-python-fall-2016/"
+                  
+                  <a href="https://ocw.mit.edu/courses/6-0001-introduction-to-computer-science-and-programming-in-python-fall-2016/"
                     className="hover:underline"
                   >
                     Learn
                   </a>
                 </li>
                 <li>
-                  <Link
-                    to="#"
+                  <a
+                    href="#"
                     className="hover:underline"
                     title="Work in Progress..."
                   >
                     Community
-                  </Link>
+                  </a>
                 </li>
               </ul>
             </div>
@@ -78,15 +184,15 @@ function Footer() {
         <hr className="my-6 border-gray-200 sm:mx-auto dark:border-white-700 lg:my-8" />
         <div className="sm:flex sm:items-center sm:justify-between">
           <span className="text-sm text-gray-500 sm:text-center dark:text-gray-400">
-            © 2023{" "}
+            © 2025{" "}
             <a href="#" className="hover:underline">
               CodeHat™
             </a>
             . All Rights Reserved.
           </span>
           <div className="flex mt-4 space-x-6 sm:justify-center sm:mt-0">
-            <a
-              href="#"
+            
+            <a  href="#"
               className="text-gray-500 hover:text-gray-900 dark:hover:text-white"
             >
               <svg
@@ -103,8 +209,8 @@ function Footer() {
               </svg>
               <span className="sr-only">Facebook page</span>
             </a>
-            <a
-              href="#"
+            
+            <a href="#"
               className="text-gray-500 hover:text-gray-900 dark:hover:text-white"
             >
               <svg
@@ -121,8 +227,8 @@ function Footer() {
               </svg>
               <span className="sr-only">Instagram page</span>
             </a>
-            <a
-              href="#"
+            
+            <a href="#"
               className="text-gray-500 hover:text-gray-900 dark:hover:text-white"
             >
               <svg
@@ -135,8 +241,8 @@ function Footer() {
               </svg>
               <span className="sr-only">Twitter page</span>
             </a>
-            <a
-              href={gitHubURL}
+            
+            <a href={gitHubURL}
               target="_blank"
               className="text-gray-500 hover:text-gray-900 dark:hover:text-white"
             >

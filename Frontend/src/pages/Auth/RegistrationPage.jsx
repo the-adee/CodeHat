@@ -343,7 +343,7 @@ const RegistrationPage = () => {
                     >
                       I accept the{" "}
                       <Link
-                        to="/terms"
+                        to="/termsofservice"
                         className="font-medium text-primary-600 hover:underline dark:text-primary-500"
                       >
                         Terms and Conditions
