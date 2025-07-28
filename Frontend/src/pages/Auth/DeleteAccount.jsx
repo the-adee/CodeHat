@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import Header from "../../components/Navigation/Header";
 import Footer from "../../components/Navigation/Footer";
-import { auth } from "../../Firebase";
+import { auth, db } from "../../Firebase"; // Import db
+import { doc, deleteDoc } from "firebase/firestore"; // Import Firestore functions
 import { useNavigate } from "react-router-dom";
 import NoUserError from "../../errors/NoUserError";
 import { ScaleLoader } from "react-spinners";
@@ -44,7 +45,7 @@ const DeleteAccount = () => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
       setUser(firebaseUser);
-      setLoadingUser(false); // done loading
+      setLoadingUser(false);
     });
 
     return () => unsubscribe();
@@ -62,18 +63,33 @@ const DeleteAccount = () => {
     try {
       showAlert("info", "Deleting your account...", false);
 
-      // Step 1: First try to delete Firebase Auth account to check if re-authentication is needed
-      await user.delete();
+      // Step 1: Delete Firestore user document first
+      try {
+        await deleteDoc(doc(db, "users", user.uid));
+        console.log("Firestore user document deleted successfully");
+      } catch (firestoreError) {
+        console.error("Error deleting Firestore document:", firestoreError);
+        // Continue with deletion even if Firestore fails
+        showAlert("warning", "Some profile data couldn't be deleted, but continuing with account deletion...", false);
+      }
 
-      // Step 2: Only delete MongoDB data if Firebase deletion was successful
-      await fetch(`${backend_api}/deleteuseraccount?email=${user.email}`, {
-        method: "DELETE",
-      });
+      // Step 2: Delete from your backend/MongoDB
+      try {
+        await fetch(`${backend_api}/deleteuseraccount?email=${user.email}&userId=${user.uid}`, {
+          method: "DELETE",
+        });
+        console.log("Backend user data deleted successfully");
+      } catch (backendError) {
+        console.error("Error deleting backend data:", backendError);
+        // Continue with deletion even if backend fails
+      }
+
+      // Step 3: Delete Firebase Auth account (this should be last)
+      await user.delete();
 
       redirectingRef.current = true;
       localStorage.setItem("fromDeletion", "true");
 
-      // In DeleteAccount.jsx, update the navigation:
       showAlert("success", "Account deleted successfully. Redirecting...");
       setTimeout(() => {
         navigate("/goodbye", {
@@ -81,6 +97,7 @@ const DeleteAccount = () => {
           replace: true,
         });
       }, 2000);
+
     } catch (error) {
       if (error.code === "auth/requires-recent-login") {
         showAlert(

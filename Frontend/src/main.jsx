@@ -6,6 +6,7 @@ import App from "./App";
 import PageNotFound from "./errors/PageNotFoundError";
 import Login from "./pages/Auth/LoginPage";
 import ForgotPasswordPage from "./pages/Auth/ForgotPasswordPage";
+import ResetPasswordConfirmation from "./pages/Auth/ResetPasswordConfirmation";
 import Register from "./pages/Auth/RegistrationPage";
 import VerifyEmailPage from "./pages/Auth/VerifyEmai";
 import CreateProfile from "./user-profile/CreateProfile";
@@ -41,6 +42,7 @@ export const AppWithAuth = () => {
         <Route path="*" element={<PageNotFound />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password-confirmation" element={<ResetPasswordConfirmation />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/createprofile" element={<CreateProfile />} />
