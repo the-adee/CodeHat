@@ -182,6 +182,7 @@ const RegistrationPage = () => {
                 createdAt: new Date().toISOString(),
                 emailVerified: false,
                 profileComplete: true,
+                fullProfileComplete: false,
               });
 
               // Mark username as taken in your backend

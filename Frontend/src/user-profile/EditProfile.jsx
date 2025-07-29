@@ -62,6 +62,12 @@ const EditProfile = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(true);
 
+  // Get current date for validation
+  const getCurrentDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
   // Add this useEffect BEFORE your existing useEffect
   useEffect(() => {
     checkAuthentication();
@@ -148,6 +154,14 @@ const EditProfile = () => {
     )}-${String(date.getDate()).padStart(2, "0")}`;
   };
 
+  // Get minimum date for end date based on start date
+  const getMinEndDate = (startDate) => {
+    if (!startDate) return "";
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + 1); // Add one day to start date
+    return date.toISOString().split('T')[0];
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -162,18 +176,34 @@ const EditProfile = () => {
   const handleExperienceChange = (index, field, value) => {
     setFormData((prev) => ({
       ...prev,
-      C_Experience: prev.C_Experience.map((exp, i) =>
-        i === index ? { ...exp, [field]: value } : exp
-      ),
+      C_Experience: prev.C_Experience.map((exp, i) => {
+        if (i === index) {
+          const updatedExp = { ...exp, [field]: value };
+          // If changing start date, clear end date if it's before the new start date
+          if (field === 'startDate' && exp.endDate && value && new Date(exp.endDate) <= new Date(value)) {
+            updatedExp.endDate = "";
+          }
+          return updatedExp;
+        }
+        return exp;
+      }),
     }));
   };
 
   const handleEducationChange = (index, field, value) => {
     setFormData((prev) => ({
       ...prev,
-      C_Education: prev.C_Education.map((edu, i) =>
-        i === index ? { ...edu, [field]: value } : edu
-      ),
+      C_Education: prev.C_Education.map((edu, i) => {
+        if (i === index) {
+          const updatedEdu = { ...edu, [field]: value };
+          // If changing start date, clear end date if it's before the new start date
+          if (field === 'startDate' && edu.endDate && value && new Date(edu.endDate) <= new Date(value)) {
+            updatedEdu.endDate = "";
+          }
+          return updatedEdu;
+        }
+        return edu;
+      }),
     }));
   };
 
@@ -232,24 +262,23 @@ const EditProfile = () => {
   const validateForm = () => {
     const newErrors = {};
 
+    // Only validate required fields
     if (!formData.C_Name.trim()) newErrors.C_Name = "Full name is required";
     if (!formData.C_FName.trim()) newErrors.C_FName = "First name is required";
-    if (!formData.C_LName.trim()) newErrors.C_LName = "Last name is required";
-    if (!formData.C_Email.trim()) newErrors.C_Email = "Email is required";
     if (!formData.C_PhoneNo.toString().trim())
       newErrors.C_PhoneNo = "Phone number is required";
-    if (!formData.C_Gender) newErrors.C_Gender = "Gender is required";
     if (!formData.C_DOB) newErrors.C_DOB = "Date of birth is required";
-    if (!formData.C_Address.trim()) newErrors.C_Address = "Address is required";
     if (!formData.C_TagLine.trim())
       newErrors.C_TagLine = "Tag line is required";
     if (!formData.C_Description.trim())
-      newErrors.C_Description = "Description is required";
+      newErrors.C_Description = "Professional summary is required";
 
+    // Validate email format if provided
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (formData.C_Email && !emailRegex.test(formData.C_Email))
       newErrors.C_Email = "Please enter a valid email address";
 
+    // Validate phone number format
     const phoneRegex = /^\d{10}$/;
     if (
       formData.C_PhoneNo &&
@@ -414,7 +443,7 @@ const EditProfile = () => {
                 Basic Information
               </h2>
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Full Name *
@@ -472,7 +501,7 @@ const EditProfile = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Last Name *
+                    Last Name
                   </label>
                   <input
                     type="text"
@@ -491,7 +520,7 @@ const EditProfile = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email *
+                    Email
                   </label>
                   <input
                     type="email"
@@ -530,7 +559,7 @@ const EditProfile = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Gender *
+                    Gender
                   </label>
                   <select
                     name="C_Gender"
@@ -560,6 +589,7 @@ const EditProfile = () => {
                     name="C_DOB"
                     value={formData.C_DOB}
                     onChange={handleInputChange}
+                    max={getCurrentDate()}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                   />
                   {errors.C_DOB && (
@@ -570,7 +600,7 @@ const EditProfile = () => {
 
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Current Address *
+                  Current Address
                 </label>
                 <textarea
                   name="C_Address"
@@ -631,7 +661,7 @@ const EditProfile = () => {
                 Social Links & Portfolio
               </h2>
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     GitHub Profile
@@ -678,7 +708,7 @@ const EditProfile = () => {
 
             {/* Experience Section */}
             <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 space-y-2 sm:space-y-0">
                 <h2 className="text-xl font-semibold text-gray-800 flex items-center">
                   <span className="text-green-500 mr-2">
                     <svg
@@ -698,7 +728,7 @@ const EditProfile = () => {
                 <button
                   type="button"
                   onClick={addExperience}
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200 flex items-center"
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200 flex items-center w-full sm:w-auto justify-center"
                 >
                   <svg
                     className="h-4 w-4 mr-1"
@@ -747,7 +777,7 @@ const EditProfile = () => {
                       )}
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Job Title
@@ -762,307 +792,339 @@ const EditProfile = () => {
                               e.target.value
                             )
                           }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                          placeholder="e.g., Senior Frontend Developer"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Company
-                        </label>
-                        <input
-                          type="text"
-                          value={experience.company}
-                          onChange={(e) =>
-                            handleExperienceChange(
-                              index,
-                              "company",
-                              e.target.value
-                            )
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                          placeholder="e.g., Tech Company Inc."
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Start Date
-                          </label>
-                          <input
-                            type="date"
-                            value={experience.startDate || ""}
-                            onChange={(e) =>
-                              handleExperienceChange(
-                                index,
-                                "startDate",
-                                e.target.value
-                              )
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                          />
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900" placeholder="e.g., Senior Frontend Developer"/>  
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            End Date
-                          </label>
-                          <input
-                            type="date"
-                            value={experience.endDate || ""}
-                            onChange={(e) =>
-                              handleExperienceChange(
-                                index,
-                                "endDate",
-                                e.target.value
-                              )
-                            }
-                            disabled={experience.isCurrent}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1">
-                        <label className="flex items-center text-sm text-gray-700 mt-1">
-                          <input
-                            type="checkbox"
-                            checked={experience.isCurrent || false}
-                            onChange={(e) => {
-                              handleExperienceChange(
-                                index,
-                                "isCurrent",
-                                e.target.checked
-                              );
-                              if (e.target.checked) {
-                                handleExperienceChange(index, "endDate", "");
-                              }
-                            }}
-                            className="mr-2"
-                          />
-                          I currently work here
-                        </label>
-                      </div>
-
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Description
-                        </label>
-                        <textarea
-                          value={experience.description}
-                          onChange={(e) =>
-                            handleExperienceChange(
-                              index,
-                              "description",
-                              e.target.value
-                            )
-                          }
-                          rows="3"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                          placeholder="Describe your responsibilities, achievements, and technologies used..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Education Section */}
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-800 flex items-center">
-                  <span className="text-green-500 mr-2">
-                    <svg
-                      className="h-5 w-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
-                    </svg>
-                  </span>
-                  Education
-                </h2>
-                <button
-                  type="button"
-                  onClick={addEducation}
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200 flex items-center"
-                >
-                  <svg
-                    className="h-4 w-4 mr-1"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                      clipRule="evenodd"
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Company
+                    </label>
+                    <input
+                      type="text"
+                      value={experience.company}
+                      onChange={(e) =>
+                        handleExperienceChange(
+                          index,
+                          "company",
+                          e.target.value
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                      placeholder="e.g., Tech Company Inc."
                     />
-                  </svg>
-                  Add Education
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                {formData.C_Education.map((education, index) => (
-                  <div
-                    key={index}
-                    className="border border-gray-200 rounded-lg p-4 relative"
-                  >
-                    <div className="flex justify-between items-center mb-3">
-                      <h3 className="text-lg font-medium text-gray-700">
-                        Education {index + 1}
-                      </h3>
-                      {formData.C_Education.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeEducation(index)}
-                          className="text-red-500 hover:text-red-700 p-1"
-                          title="Remove this education"
-                        >
-                          <svg
-                            className="h-5 w-5"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Degree/Qualification
-                        </label>
-                        <input
-                          type="text"
-                          value={education.degree}
-                          onChange={(e) =>
-                            handleEducationChange(
-                              index,
-                              "degree",
-                              e.target.value
-                            )
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                          placeholder="e.g., Bachelor of Computer Science"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Institution
-                        </label>
-                        <input
-                          type="text"
-                          value={education.institution}
-                          onChange={(e) =>
-                            handleEducationChange(
-                              index,
-                              "institution",
-                              e.target.value
-                            )
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                          placeholder="e.g., University of Technology"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Start Date
-                          </label>
-                          <input
-                            type="date"
-                            value={education.startDate || ""}
-                            onChange={(e) =>
-                              handleEducationChange(
-                                index,
-                                "startDate",
-                                e.target.value
-                              )
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            End Date
-                          </label>
-                          <input
-                            type="date"
-                            value={education.endDate || ""}
-                            onChange={(e) =>
-                              handleEducationChange(
-                                index,
-                                "endDate",
-                                e.target.value
-                              )
-                            }
-                            disabled={education.isOngoing}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1">
-                        <label className="flex items-center text-sm text-gray-700 mt-1">
-                          <input
-                            type="checkbox"
-                            checked={education.isOngoing || false}
-                            onChange={(e) => {
-                              handleEducationChange(
-                                index,
-                                "isOngoing",
-                                e.target.checked
-                              );
-                              if (e.target.checked) {
-                                handleEducationChange(index, "endDate", "");
-                              }
-                            }}
-                            className="mr-2"
-                          />
-                          Currently studying here
-                        </label>
-                      </div>
-
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Description
-                        </label>
-                        <textarea
-                          value={education.description}
-                          onChange={(e) =>
-                            handleEducationChange(
-                              index,
-                              "description",
-                              e.target.value
-                            )
-                          }
-                          rows="3"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                          placeholder="Describe your coursework, achievements, relevant projects..."
-                        />
-                      </div>
-                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
 
-            {/* Submit Buttons */}
-            <div className="flex justify-center space-x-4 pt-6">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="px-8 py-3 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition duration-200 flex items-center"
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={experience.startDate || ""}
+                      onChange={(e) =>
+                        handleExperienceChange(
+                          index,
+                          "startDate",
+                          e.target.value
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      value={experience.endDate || ""}
+                      onChange={(e) =>
+                        handleExperienceChange(
+                          index,
+                          "endDate",
+                          e.target.value
+                        )
+                      }
+                      min={getMinEndDate(experience.startDate)}
+                      disabled={experience.isCurrent}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 disabled:bg-gray-100"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="flex items-center text-sm text-gray-700 mt-1">
+                      <input
+                        type="checkbox"
+                        checked={experience.isCurrent || false}
+                        onChange={(e) => {
+                          handleExperienceChange(
+                            index,
+                            "isCurrent",
+                            e.target.checked
+                          );
+                          if (e.target.checked) {
+                            handleExperienceChange(index, "endDate", "");
+                          }
+                        }}
+                        className="mr-2"
+                      />
+                      I currently work here
+                    </label>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      value={experience.description}
+                      onChange={(e) =>
+                        handleExperienceChange(
+                          index,
+                          "description",
+                          e.target.value
+                        )
+                      }
+                      rows="3"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                      placeholder="Describe your responsibilities, achievements, and technologies used..."
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Education Section */}
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 space-y-2 sm:space-y-0">
+            <h2 className="text-xl font-semibold text-gray-800 flex items-center">
+              <span className="text-green-500 mr-2">
+                <svg
+                  className="h-5 w-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
+                </svg>
+              </span>
+              Education
+            </h2>
+            <button
+              type="button"
+              onClick={addEducation}
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200 flex items-center w-full sm:w-auto justify-center"
+            >
+              <svg
+                className="h-4 w-4 mr-1"
+                fill="currentColor"
+                viewBox="0 0 20 20"
               >
+                <path
+                  fillRule="evenodd"
+                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              Add Education
+            </button>
+          </div>
+
+          <div className="space-y-6">
+            {formData.C_Education.map((education, index) => (
+              <div
+                key={index}
+                className="border border-gray-200 rounded-lg p-4 relative"
+              >
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-medium text-gray-700">
+                    Education {index + 1}
+                  </h3>
+                  {formData.C_Education.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeEducation(index)}
+                      className="text-red-500 hover:text-red-700 p-1"
+                      title="Remove this education"
+                    >
+                      <svg
+                        className="h-5 w-5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Degree/Qualification
+                    </label>
+                    <input
+                      type="text"
+                      value={education.degree}
+                      onChange={(e) =>
+                        handleEducationChange(
+                          index,
+                          "degree",
+                          e.target.value
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                      placeholder="e.g., Bachelor of Computer Science"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Institution
+                    </label>
+                    <input
+                      type="text"
+                      value={education.institution}
+                      onChange={(e) =>
+                        handleEducationChange(
+                          index,
+                          "institution",
+                          e.target.value
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                      placeholder="e.g., University of Technology"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={education.startDate || ""}
+                      onChange={(e) =>
+                        handleEducationChange(
+                          index,
+                          "startDate",
+                          e.target.value
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      value={education.endDate || ""}
+                      onChange={(e) =>
+                        handleEducationChange(
+                          index,
+                          "endDate",
+                          e.target.value
+                        )
+                      }
+                      min={getMinEndDate(education.startDate)}
+                      disabled={education.isOngoing}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 disabled:bg-gray-100"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="flex items-center text-sm text-gray-700 mt-1">
+                      <input
+                        type="checkbox"
+                        checked={education.isOngoing || false}
+                        onChange={(e) => {
+                          handleEducationChange(
+                            index,
+                            "isOngoing",
+                            e.target.checked
+                          );
+                          if (e.target.checked) {
+                            handleEducationChange(index, "endDate", "");
+                          }
+                        }}
+                        className="mr-2"
+                      />
+                      Currently studying here
+                    </label>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      value={education.description}
+                      onChange={(e) =>
+                        handleEducationChange(
+                          index,
+                          "description",
+                          e.target.value
+                        )
+                      }
+                      rows="3"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                      placeholder="Describe your coursework, achievements, relevant projects..."
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Submit Buttons */}
+        <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 pt-6">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="w-full sm:w-auto px-8 py-3 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition duration-200 flex items-center justify-center"
+          >
+            <svg
+              className="h-4 w-4 mr-2"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full sm:w-auto px-8 py-3 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-medium rounded-lg transition duration-200 flex items-center justify-center"
+          >
+            {isSubmitting ? (
+              <>
+                <ScaleLoader
+                  css={css`
+                    margin-right: 8px;
+                  `}
+                  size={20}
+                  color={"#ffffff"}
+                  loading={isSubmitting}
+                />
+                Updating Profile...
+              </>
+            ) : (
+              <>
                 <svg
                   className="h-4 w-4 mr-2"
                   fill="currentColor"
@@ -1070,54 +1132,20 @@ const EditProfile = () => {
                 >
                   <path
                     fillRule="evenodd"
-                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                     clipRule="evenodd"
                   />
                 </svg>
-                Cancel
-              </button>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-8 py-3 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-medium rounded-lg transition duration-200 flex items-center"
-              >
-                {isSubmitting ? (
-                  <>
-                    <ScaleLoader
-                      css={css`
-                        margin-right: 8px;
-                      `}
-                      size={20}
-                      color={"#ffffff"}
-                      loading={isSubmitting}
-                    />
-                    Updating Profile...
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      className="h-4 w-4 mr-2"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    Update Profile
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+                Update Profile
+              </>
+            )}
+          </button>
         </div>
-      </div>
-      <Footer />
-    </>
-  );
+      </form>
+    </div>
+  </div>
+  <Footer />
+</>
+);
 };
-
 export default EditProfile;

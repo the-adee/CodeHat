@@ -52,7 +52,7 @@ function Footer() {
         ]);
 
         setVisitorCount(visitorRes.data.count);
-        setCodeExecutionCount(executionRes.data.count);
+        setCodeExecutionCount(executionRes.data.linesExecuted);
       } catch (error) {
         console.error('Error fetching counts:', error);
       } finally {
@@ -70,7 +70,7 @@ function Footer() {
           axios.get(`${API_URL}/api/code-execution-count`)
         ]);
         setVisitorCount(visitorRes.data.count);
-        setCodeExecutionCount(executionRes.data.count);
+        setCodeExecutionCount(executionRes.data.linesExecuted);
       } catch (error) {
         console.error('Error refreshing counts:', error);
       }
@@ -83,34 +83,35 @@ function Footer() {
     <footer className="bg-black dark:bg-gray-900 w-full mt-auto">
       <div className="mx-auto w-full container p-4 sm:p-6">
         {/* Stats Section - New Addition */}
-        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-          <div className="flex items-center space-x-3 text-gray-400">
-            <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-            </svg>
-            <span className="text-sm">
-              {loading ? (
-                <span className="inline-block w-20 h-4 bg-gray-700 rounded animate-pulse"></span>
-              ) : (
-                <>Visited by over <span className="font-semibold text-white">{formatNumber(visitorCount)}</span> people</>
-              )}
-            </span>
-          </div>
-          
-          <div className="flex items-center space-x-3 text-gray-400">
-            <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-            <span className="text-sm">
-              {loading ? (
-                <span className="inline-block w-32 h-4 bg-gray-700 rounded animate-pulse"></span>
-              ) : (
-                <>Over <span className="font-semibold text-white">{formatCodeExecutions(codeExecutionCount)}</span> lines of code executed</>
-              )}
-            </span>
-          </div>
-        </div>
+        <div className="mb-8 flex flex-col md:flex-row justify-between gap-4 md:gap-8">
+  <div className="flex items-center space-x-3 text-gray-400">
+    <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+      <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+    </svg>
+    <span className="text-sm">
+      {loading ? (
+        <span className="inline-block w-32 h-4 bg-gray-700 rounded animate-pulse"></span>
+      ) : (
+        <>Over <span className="font-semibold text-white">{formatCodeExecutions(codeExecutionCount)}</span> lines of code executed</>
+      )}
+    </span>
+  </div>
+
+  <div className="flex items-center space-x-3 text-gray-400 justify-end">
+    <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+      <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+    </svg>
+    <span className="text-sm">
+      {loading ? (
+        <span className="inline-block w-20 h-4 bg-gray-700 rounded animate-pulse"></span>
+      ) : (
+        <>Visited by over <span className="font-semibold text-white">{formatNumber(visitorCount)}</span> people</>
+      )}
+    </span>
+  </div>
+</div>
+
 
         <div className="md:flex md:justify-between">
           <div className="mb-6 md:mb-0">

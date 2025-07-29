@@ -3,6 +3,7 @@ import Header from "../components/Navigation/Header";
 import Footer from "../components/Navigation/Footer";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../Firebase";
+import { doc, getDoc, getFirestore } from "firebase/firestore";
 import NoUserError from "../errors/NoUserError";
 import { ScaleLoader } from "react-spinners";
 import jsPDF from "jspdf";
@@ -11,14 +12,33 @@ const ProfilePage = () => {
   const [profileData, setProfileData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [userName, setUserName] = useState("");
   const [authLoading, setAuthLoading] = useState(true);
   const navigate = useNavigate();
   const backend_api = import.meta.env.VITE_BACKEND_API;
+  const db = getFirestore();
+
+  // Function to fetch user name from Firestore
+  const fetchUserName = async (userId) => {
+    try {
+      const userDoc = await getDoc(doc(db, "users", userId));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setUserName(userData.username || userData.displayName || userData.name || "User");
+      }
+    } catch (error) {
+      console.error("Error fetching user name:", error);
+      setUserName("User");
+    }
+  };
 
   // Handle authentication state
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((authUser) => {
       setUser(authUser);
+      if (authUser) {
+        fetchUserName(authUser.uid);
+      }
       setAuthLoading(false);
     });
 
@@ -27,7 +47,7 @@ const ProfilePage = () => {
 
   // Fetch profile data when user is authenticated
   useEffect(() => {
-    if (authLoading) return; // Wait for auth to be determined
+    if (authLoading) return;
 
     if (!user || !user.email) {
       setIsLoading(false);
@@ -36,7 +56,6 @@ const ProfilePage = () => {
 
     const fetchProfileData = async () => {
       try {
-        // Get Firebase ID token
         const token = await user.getIdToken();
 
         const response = await fetch(
@@ -44,7 +63,7 @@ const ProfilePage = () => {
           {
             method: "GET",
             headers: {
-              Authorization: `Bearer ${token}`, // Add Bearer token
+              Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
           }
@@ -59,7 +78,6 @@ const ProfilePage = () => {
       } catch (err) {
         console.error("Error fetching profile:", err);
       } finally {
-        // Introduce a delay of 2 seconds before setting isLoading to false
         setTimeout(() => {
           setIsLoading(false);
         }, 2000);
@@ -168,7 +186,6 @@ const ProfilePage = () => {
       y += 6;
     }
 
-    // Save the file
     const fileName = `${profileData.C_FName}_${profileData.C_LName}_Profile.pdf`;
     doc.save(fileName);
   };
@@ -191,7 +208,6 @@ const ProfilePage = () => {
     <>
       <Header />
       {isLoading ? (
-        // Render loading spinner while data is loading
         <div className="flex justify-center items-center h-screen">
           <ScaleLoader
             cssOverride={override}
@@ -209,32 +225,34 @@ const ProfilePage = () => {
           }}
         >
           <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+            <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 lg:items-start">
               {/* Left Sidebar */}
-              <div className="w-full lg:w-1/3">
+              <div className="w-full lg:w-1/3 lg:sticky lg:top-4">
                 {/* Profile Info Card */}
                 <div className="bg-white p-4 sm:p-6 border-t-4 border-green-400 rounded-lg shadow-sm">
-                  {/* Profile Name */}
+                  {/* Username */}
+                  {userName && (
+                    <div className="mb-2">
+                      <span className="text-gray-500 text-sm font-medium">
+                        @{userName}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Full Name */}
                   {profileData && (
                     <div className="mb-3">
                       <h1 className="text-gray-900 font-bold text-xl sm:text-2xl leading-8">
-                        {profileData.C_Name}
+                        {profileData.C_FName} {profileData.C_LName}
                       </h1>
                     </div>
                   )}
 
                   {/* Profile Tagline */}
                   {profileData && (
-                    <h3 className="text-gray-600 font-medium text-base sm:text-lg mb-2">
+                    <h3 className="text-gray-600 font-medium text-base sm:text-lg mb-4">
                       {profileData.C_TagLine}
                     </h3>
-                  )}
-
-                  {/* Profile Description */}
-                  {profileData && (
-                    <p className="text-sm text-gray-500 leading-6 mb-4">
-                      <b>{profileData.C_Description}</b>
-                    </p>
                   )}
 
                   {/* Account Status */}
@@ -288,8 +306,8 @@ const ProfilePage = () => {
                     {/* GitHub */}
                     <div className="text-center">
                       {profileData?.C_Github ? (
-                        <a
-                          href={ensureHttps(profileData.C_Github)}
+                        
+                        <a href={ensureHttps(profileData.C_Github)}
                           className="text-gray-700 block hover:text-gray-900 transition-colors"
                           target="_blank"
                           rel="noopener noreferrer"
@@ -323,8 +341,8 @@ const ProfilePage = () => {
                     {/* LinkedIn */}
                     <div className="text-center">
                       {profileData?.C_LinkedIn ? (
-                        <a
-                          href={ensureHttps(profileData.C_LinkedIn)}
+                        
+                        <a href={ensureHttps(profileData.C_LinkedIn)}
                           className="text-gray-700 block hover:text-gray-900 transition-colors"
                           target="_blank"
                           rel="noopener noreferrer"
@@ -358,8 +376,8 @@ const ProfilePage = () => {
                     {/* Website */}
                     <div className="text-center">
                       {profileData?.C_Website ? (
-                        <a
-                          href={ensureHttps(profileData.C_Website)}
+                        
+                        <a href={ensureHttps(profileData.C_Website)}
                           className="text-gray-700 block hover:text-gray-900 transition-colors"
                           target="_blank"
                           rel="noopener noreferrer"
@@ -394,7 +412,7 @@ const ProfilePage = () => {
               </div>
 
               {/* Main Content */}
-              <div className="w-full lg:w-2/3">
+              <div className="w-full lg:w-2/3 space-y-4">
                 {/* About Section */}
                 <div className="bg-white p-4 sm:p-6 shadow-sm rounded-lg">
                   <div className="flex items-center space-x-2 font-semibold text-gray-700 leading-8 mb-6">
@@ -418,6 +436,18 @@ const ProfilePage = () => {
                       About
                     </span>
                   </div>
+
+                  {/* Professional Summary */}
+                  {profileData && profileData.C_Description && (
+                    <div className="mb-6">
+                      <h4 className="text-gray-800 font-semibold text-base mb-3">
+                        Professional Summary
+                      </h4>
+                      <p className="text-gray-600 text-sm leading-6">
+                        {profileData.C_Description}
+                      </p>
+                    </div>
+                  )}
 
                   <div className="text-gray-700">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -491,8 +521,8 @@ const ProfilePage = () => {
                           </div>
                           {profileData && (
                             <div className="text-gray-600">
-                              <a
-                                className="text-blue-800 hover:text-blue-900 transition-colors"
+                              
+                              <a className="text-blue-800 hover:text-blue-900 transition-colors"
                                 href={`mailto:${profileData.C_Email}`}
                               >
                                 {profileData.C_Email}
@@ -550,7 +580,7 @@ const ProfilePage = () => {
                 </div>
 
                 {/* Experience and Education Section */}
-                <div className="bg-white p-4 sm:p-6 shadow-sm rounded-lg mt-4">
+                <div className="bg-white p-4 sm:p-6 shadow-sm rounded-lg">
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     {/* Experience */}
                     <div>
@@ -651,33 +681,33 @@ const ProfilePage = () => {
                                 {edu.isOngoing
                                   ? "Ongoing"
                                   : edu.endDate && formatDate(edu.endDate)}
-                              </div>
-                              {edu.description && (
-                                <div className="text-gray-600 text-sm">
-                                  {edu.description}
-                                </div>
-                              )}
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-gray-500 text-sm">
-                            No education data available
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <NoUserError />
-      )}
-      <Footer />
-    </>
-  );
+                             </div>
+                             {edu.description && (
+                               <div className="text-gray-600 text-sm">
+                                 {edu.description}
+                               </div>
+                             )}
+                           </div>
+                         ))
+                       ) : (
+                         <div className="text-gray-500 text-sm">
+                           No education data available
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </div>
+         </div>
+       </div>
+     ) : (
+       <NoUserError />
+     )}
+     <Footer />
+   </>
+ );
 };
 
 export default ProfilePage;

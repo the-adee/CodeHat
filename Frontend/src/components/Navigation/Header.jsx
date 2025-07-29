@@ -3,7 +3,8 @@ import { Disclosure, Menu, Transition } from "@headlessui/react";
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { auth } from "../../Firebase";
+import { auth, db } from "../../Firebase"; // <-- ADDED db import
+import { doc, getDoc } from "firebase/firestore"; // <-- ADDED Firestore functions
 
 const navigation = [
   { name: "Home", to: "/" },
@@ -18,9 +19,20 @@ export default function Header() {
   const location = useLocation();
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        setUser(user.email);
+        try {
+          const docRef = doc(db, "users", user.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setUser(docSnap.data().username || user.email);
+          } else {
+            setUser(user.email);
+          }
+        } catch (err) {
+          console.error("Failed to fetch username:", err);
+          setUser(user.email);
+        }
       } else {
         setUser(null);
       }
@@ -60,7 +72,6 @@ export default function Header() {
                         key={item.name}
                         to={item.to}
                         className={classNames(
-                          // Use location.pathname to check if the current item's "to" matches the current URL path
                           location.pathname === item.to
                             ? "bg-gray-900 text-white"
                             : "text-gray-300 hover:bg-gray-700 hover:text-white",
@@ -114,7 +125,6 @@ export default function Header() {
                               </span>
                             )}
                           </Menu.Item>
-
                           <Menu.Item>
                             {({ active }) => (
                               <span
@@ -181,31 +191,57 @@ export default function Header() {
                       <Menu.Item>
                         {user ? (
                           <>
-                            <Link
-                              to="/userprofile"
-                              className="block px-4 py-2 text-sm text-gray-800 hover:bg-slate-600 hover:text-white"
-                            >
-                              Your Profile
-                            </Link>
-                            <span className="block break-words max-w-[12rem] px-4 py-2 text-sm text-gray-700 hover:bg-slate-600 hover:text-white">
-                              Logged in as:
-                              <br />
-                              {user}
+                            <span className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-700 truncate max-w-[12rem] transition-colors duration-150">
+                            <span role="img" aria-label="Hat" className="mr-1">🎩</span> Welcome, {user}
                             </span>
 
-                            <button onClick={() => auth.signOut()}>
-                              <span className="bg-gray-100 block w-48 hover:bg-slate-600 px-4 py-2 text-sm hover:text-white text-gray-700">
-                                Logout
-                              </span>
-                            </button>
+                            <Link
+                              to="/userprofile"
+                              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-150"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M5.121 17.804A11.955 11.955 0 0112 15c2.485 0 4.779.755 6.879 2.047M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                              </svg>
+                              Your Profile
+                            </Link>
+
+                            <button
+                            onClick={() => auth.signOut()}
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 hover:text-red-700 flex items-center gap-2 transition-colors duration-150">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 002 2h3a2 2 0 002-2V7a2 2 0 00-2-2h-3a2 2 0 00-2 2v1"
+                              />
+                            </svg>
+                            Logout
+                          </button>
+
                           </>
                         ) : (
                           <Link
-                            to="/login"
-                            className="bg-gray-100 block px-4 py-2 text-sm text-gray-800"
-                          >
-                            Login
-                          </Link>
+  to="/login"
+  className="w-full block text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-black rounded-md transition-colors duration-150"
+>
+  Login
+</Link>
+
                         )}
                       </Menu.Item>
                     </Menu.Items>
@@ -275,7 +311,6 @@ export default function Header() {
                         </span>
                       )}
                     </Menu.Item>
-
                     <Menu.Item>
                       {({ active }) => (
                         <span
